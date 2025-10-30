@@ -1,0 +1,128 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../setnewpassword/setnewpassword_ui.dart';
+
+
+class ForgetPassOtpController extends GetxController {
+  // Timer for code expiration - make this observable
+  var timerDuration = 179.obs; // 3 minutes in seconds
+
+  // OTP code - 4 digits (not observable since we're using TextEditingController)
+  final List<String> otpCode = List.filled(4, '');
+
+  // Focus nodes for OTP fields - 4 fields
+  final List<FocusNode> focusNodes = List.generate(4, (index) => FocusNode());
+  final List<TextEditingController> otpControllers = List.generate(4, (index) => TextEditingController());
+
+  @override
+  void onInit() {
+    super.onInit();
+    startTimer();
+  }
+
+  void startTimer() {
+    Future.delayed(Duration(seconds: 1), () {
+      if (timerDuration.value > 0) {
+        timerDuration.value--;
+        startTimer();
+      }
+    });
+  }
+
+  String getFormattedTime() {
+    int minutes = timerDuration.value ~/ 60;
+    int seconds = timerDuration.value % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  bool get isCodeComplete => otpCode.every((digit) => digit.isNotEmpty);
+
+  void handleOtpChange(String value, int index, BuildContext context) {
+    if (value.isNotEmpty) {
+      // Update the OTP code
+      otpCode[index] = value;
+      otpControllers[index].text = value;
+
+      // Move to next field if available
+      if (index < 3) {
+        FocusScope.of(context).requestFocus(focusNodes[index + 1]);
+      } else {
+        // If last field, unfocus
+        focusNodes[index].unfocus();
+
+        // Auto-submit if all fields are filled
+        if (isCodeComplete) {
+          verifyCode();
+        }
+      }
+    }
+  }
+
+  void handleBackspace(String value, int index, BuildContext context) {
+    if (value.isEmpty && index > 0) {
+      // If field is empty and backspace is pressed, move to previous field
+      FocusScope.of(context).requestFocus(focusNodes[index - 1]);
+      // Clear the previous field
+      otpCode[index - 1] = '';
+      otpControllers[index - 1].clear();
+    }
+  }
+
+  void resendCode() {
+    timerDuration.value = 179;
+    // Clear all OTP fields
+    for (int i = 0; i < 4; i++) {
+      otpCode[i] = '';
+      otpControllers[i].clear();
+    }
+    startTimer();
+
+    // Reset focus to first field
+    FocusScope.of(Get.context!).requestFocus(focusNodes[0]);
+
+    Get.snackbar(
+      'Code Sent',
+      'A new verification code has been sent to your email',
+      backgroundColor: Get.theme.primaryColor,
+      colorText: Colors.white,
+    );
+  }
+
+  void verifyCode() {
+    if (isCodeComplete) {
+      // Here you would typically verify the code with your backend
+      String enteredOtp = otpCode.join('');
+      print('Verifying OTP: $enteredOtp');
+
+      // For demo purposes, assume OTP is correct
+      Get.snackbar(
+        'Success',
+        'OTP verified successfully',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+
+      // Navigate to password reset screen
+      Get.to(() => ResetPasswordScreen());
+    } else {
+      Get.snackbar(
+        'Incomplete Code',
+        'Please enter all 4 digits',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  @override
+  void onClose() {
+    for (var focusNode in focusNodes) {
+      focusNode.dispose();
+    }
+    for (var controller in otpControllers) {
+      controller.dispose();
+    }
+    super.onClose();
+  }
+}
