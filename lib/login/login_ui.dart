@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../app_colors.dart';
-import '../app_text_styles.dart';
+import '../../app_colors.dart';
+import '../../app_text_styles.dart';
+import 'login_controller.dart';
+
 
 class LoginScreen extends StatelessWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  final LoginController controller = Get.put(LoginController());
+
+  LoginScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,9 +18,7 @@ class LoginScreen extends StatelessWidget {
         builder: (context, constraints) {
           return SingleChildScrollView(
             child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight,
-              ),
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: IntrinsicHeight(
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
@@ -24,216 +26,72 @@ class LoginScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 40),
-
-                      // Logo
-                      Image.asset(
-                        'assets/icons/T3logo.png',
-                        width: 80,
-                        height: 80,
-                      ),
-
+                      Image.asset('assets/icons/T3logo.png', width: 80, height: 80),
                       const SizedBox(height: 20),
-
-                      // Welcome text
                       Text(
                         'Welcome Back to T3CH ADVANTAGE',
-                        style: AppTextStyles.heading2.copyWith(
-                          fontSize: 18,
-                          height: 1.2,
-                        ),
+                        style: AppTextStyles.heading2.copyWith(fontSize: 18, height: 1.2),
                         textAlign: TextAlign.center,
                       ),
-
                       const SizedBox(height: 40),
 
-                      // Email field
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Email',
-                            style: AppTextStyles.onboardingDescription.copyWith(
-                              fontWeight: FontWeight.w500,
-                              height: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.lightGrey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const TextField(
-                              decoration: InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(horizontal: 15),
-                                hintText: 'Please enter your email address',
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                        ],
+                      _buildTextField(
+                        label: 'Email',
+                        hint: 'Please enter your email address',
+                        onChanged: (v) => controller.email.value = v,
                       ),
 
                       const SizedBox(height: 20),
 
-                      // Password field
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Password',
-                            style: AppTextStyles.onboardingDescription.copyWith(
-                              fontWeight: FontWeight.w500,
-                              height: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.lightGrey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const TextField(
-                              obscureText: true,
-                              decoration: InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(horizontal: 15),
-                                hintText: 'Please enter your password',
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                        ],
+                      _buildTextField(
+                        label: 'Password',
+                        hint: 'Please enter your password',
+                        obscureText: true,
+                        onChanged: (v) => controller.password.value = v,
                       ),
 
                       const SizedBox(height: 20),
 
-                      // Remember me and Forgot password
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: AppColors.lightGrey),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Remember Me',
-                                style: AppTextStyles.onboardingDescription,
-                              ),
-                            ],
-                          ),
+                          Row(children: [
+                            Container(width: 20, height: 20, decoration: BoxDecoration(border: Border.all(color: AppColors.lightGrey), borderRadius: BorderRadius.circular(4))),
+                            const SizedBox(width: 8),
+                            Text('Remember Me', style: AppTextStyles.onboardingDescription),
+                          ]),
                           GestureDetector(
-                            onTap: () {
-                              // Navigate to forgot password screen
-                              Get.toNamed('/forgot-password');
-                            },
-                            child: Text(
-                              'Forget Password?',
-                              style: AppTextStyles.onboardingDescription.copyWith(
-                                color: AppColors.primary,
-                              ),
-                            ),
+                            onTap: () => Get.toNamed('/forgot-password'),
+                            child: Text('Forget Password?', style: AppTextStyles.onboardingDescription.copyWith(color: AppColors.primary)),
                           ),
                         ],
                       ),
 
                       const SizedBox(height: 30),
 
-                      // Login button
-                      GestureDetector(
-                        onTap: () {
-                          // Handle login logic here
-                          Get.offAllNamed('/home');
-                        },
+                      Obx(() => GestureDetector(
+                        onTap: controller.isLoading.value ? null : controller.login,
                         child: Container(
                           width: double.infinity,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: controller.isLoading.value ? AppColors.lightGrey : AppColors.primary,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Center(
-                            child: Text(
-                              'Login',
-                              style: AppTextStyles.buttonText.copyWith(
-                                color: AppColors.white,
-                              ),
-                            ),
+                            child: controller.isLoading.value
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : Text('Login', style: AppTextStyles.buttonText.copyWith(color: AppColors.white)),
                           ),
                         ),
-                      ),
+                      )),
 
                       const SizedBox(height: 30),
-
-                      // Or continue with
-                      Row(
-                        children: [
-                          Expanded(child: Divider(color: AppColors.lightGrey)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            child: Text(
-                              'Or continue with',
-                              style: AppTextStyles.onboardingDescription,
-                            ),
-                          ),
-                          Expanded(child: Divider(color: AppColors.lightGrey)),
-                        ],
-                      ),
-
+                      _buildDivider(),
                       const SizedBox(height: 20),
-
-                      // Social buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              // Handle Facebook login
-                            },
-                            child: Image.asset('assets/icons/facebook.png', width: 40, height: 40),
-                          ),
-                          const SizedBox(width: 20),
-                          GestureDetector(
-                            onTap: () {
-                              // Handle Google login
-                            },
-                            child: Image.asset('assets/icons/google.png', width: 40, height: 40),
-                          ),
-                        ],
-                      ),
-
+                      _buildSocialButtons(),
                       const SizedBox(height: 30),
-
-                      // Register link
-                      GestureDetector(
-                        onTap: () {
-                          Get.toNamed('/register');
-                        },
-                        child: Text.rich(
-                          TextSpan(
-                            text: 'Don\'t have an account? ',
-                            style: AppTextStyles.onboardingDescription,
-                            children: [
-                              TextSpan(
-                                text: 'Register',
-                                style: AppTextStyles.onboardingDescription.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
+                      _buildRegisterLink(),
                       Expanded(child: SizedBox.shrink()),
                     ],
                   ),
@@ -242,6 +100,65 @@ class LoginScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildTextField({required String label, required String hint, bool obscureText = false, required Function(String) onChanged}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTextStyles.onboardingDescription.copyWith(fontWeight: FontWeight.w500)),
+        const SizedBox(height: 8),
+        Container(
+          height: 50,
+          decoration: BoxDecoration(border: Border.all(color: AppColors.lightGrey), borderRadius: BorderRadius.circular(8)),
+          child: TextField(
+            obscureText: obscureText,
+            onChanged: onChanged,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+              hintText: hint,
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: AppColors.lightGrey)),
+        Padding(padding: const EdgeInsets.symmetric(horizontal: 15), child: Text('Or continue with', style: AppTextStyles.onboardingDescription)),
+        Expanded(child: Divider(color: AppColors.lightGrey)),
+      ],
+    );
+  }
+
+  Widget _buildSocialButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        GestureDetector(child: Image.asset('assets/icons/facebook.png', width: 40, height: 40)),
+        const SizedBox(width: 20),
+        GestureDetector(child: Image.asset('assets/icons/google.png', width: 40, height: 40)),
+      ],
+    );
+  }
+
+  Widget _buildRegisterLink() {
+    return GestureDetector(
+      onTap: () => Get.toNamed('/register'),
+      child: Text.rich(
+        TextSpan(
+          text: 'Don\'t have an account? ',
+          style: AppTextStyles.onboardingDescription,
+          children: [
+            TextSpan(text: 'Register', style: AppTextStyles.onboardingDescription.copyWith(fontWeight: FontWeight.w600, color: AppColors.primary)),
+          ],
+        ),
       ),
     );
   }

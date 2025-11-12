@@ -1,5 +1,6 @@
-// File: lib/screens/register_screen.dart
-import 'package:business_onboarding_app/signup/sign_up_controller.dart';
+// lib/screens/register_screen.dart
+
+import 'package:business_onboarding_app/signup/RegisterController.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../app_colors.dart';
@@ -33,7 +34,6 @@ class RegisterScreen extends StatelessWidget {
                           onPressed: () => Get.back(),
                         ),
                       ),
-
                       SizedBox(height: 20),
 
                       // Logo
@@ -42,10 +42,9 @@ class RegisterScreen extends StatelessWidget {
                         width: 80,
                         height: 80,
                       ),
-
                       SizedBox(height: 20),
 
-                      // Registration title
+                      // Title
                       Text(
                         'Registration to T3CH ADVANTAGE',
                         style: AppTextStyles.heading2.copyWith(
@@ -54,295 +53,76 @@ class RegisterScreen extends StatelessWidget {
                         ),
                         textAlign: TextAlign.center,
                       ),
-
                       SizedBox(height: 40),
 
-                      // Full Name field
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Full Name',
-                            style: AppTextStyles.onboardingDescription.copyWith(
-                              fontWeight: FontWeight.w500,
-                              height: 1.2,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.lightGrey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: TextField(
-                              onChanged: _controller.validateFullName,
-                              decoration: InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(horizontal: 15),
-                                hintText: 'Please enter your full name',
-                                hintStyle: AppTextStyles.onboardingDescription.copyWith(
-                                  color: AppColors.grey,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                          Obx(() => _controller.fullNameError.value.isNotEmpty
-                              ? Padding(
-                            padding: EdgeInsets.only(top: 4),
-                            child: Text(
-                              _controller.fullNameError.value,
-                              style: TextStyle(
-                                color: AppColors.error,
-                                fontSize: 12,
-                              ),
-                            ),
-                          )
-                              : SizedBox.shrink()),
-                        ],
+                      // Full Name Field
+                      _buildTextField(
+                        label: 'Full Name',
+                        hint: 'Please enter your full name',
+                        onChanged: _controller.validateFullName,
+                        error: _controller.fullNameError,
                       ),
-
                       SizedBox(height: 20),
 
-                      // Email field
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Email',
-                            style: AppTextStyles.onboardingDescription.copyWith(
-                              fontWeight: FontWeight.w500,
-                              height: 1.2,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.lightGrey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: TextField(
-                              onChanged: _controller.validateEmail,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(horizontal: 15),
-                                hintText: 'Please enter your email address',
-                                hintStyle: AppTextStyles.onboardingDescription.copyWith(
-                                  color: AppColors.grey,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                          Obx(() => _controller.emailError.value.isNotEmpty
-                              ? Padding(
-                            padding: EdgeInsets.only(top: 4),
-                            child: Text(
-                              _controller.emailError.value,
-                              style: TextStyle(
-                                color: AppColors.error,
-                                fontSize: 12,
-                              ),
-                            ),
-                          )
-                              : SizedBox.shrink()),
-                        ],
+                      // Email Field
+                      _buildTextField(
+                        label: 'Email',
+                        hint: 'Please enter your email address',
+                        keyboardType: TextInputType.emailAddress,
+                        onChanged: _controller.validateEmail,
+                        error: _controller.emailError,
                       ),
-
                       SizedBox(height: 20),
 
-                      // Password field
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Password',
-                            style: AppTextStyles.onboardingDescription.copyWith(
-                              fontWeight: FontWeight.w500,
-                              height: 1.2,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.lightGrey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: TextField(
-                              onChanged: _controller.validatePassword,
-                              obscureText: true,
-                              decoration: InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(horizontal: 15),
-                                hintText: 'Please enter your password',
-                                hintStyle: AppTextStyles.onboardingDescription.copyWith(
-                                  color: AppColors.grey,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                          Obx(() => _controller.passwordError.value.isNotEmpty
-                              ? Padding(
-                            padding: EdgeInsets.only(top: 4),
-                            child: Text(
-                              _controller.passwordError.value,
-                              style: TextStyle(
-                                color: AppColors.error,
-                                fontSize: 12,
-                              ),
-                            ),
-                          )
-                              : SizedBox.shrink()),
-                        ],
+                      // Password Field
+                      _buildTextField(
+                        label: 'Password',
+                        hint: 'Please enter your password',
+                        obscureText: true,
+                        onChanged: _controller.validatePassword,
+                        error: _controller.passwordError,
                       ),
-
                       SizedBox(height: 20),
 
-                      // Confirm Password field
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Confirm Password',
-                            style: AppTextStyles.onboardingDescription.copyWith(
-                              fontWeight: FontWeight.w500,
-                              height: 1.2,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.lightGrey),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: TextField(
-                              onChanged: _controller.validateConfirmPassword,
-                              obscureText: true,
-                              decoration: InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(horizontal: 15),
-                                hintText: 'Please re-enter your password',
-                                hintStyle: AppTextStyles.onboardingDescription.copyWith(
-                                  color: AppColors.grey,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                          Obx(() => _controller.confirmPasswordError.value.isNotEmpty
-                              ? Padding(
-                            padding: EdgeInsets.only(top: 4),
-                            child: Text(
-                              _controller.confirmPasswordError.value,
-                              style: TextStyle(
-                                color: AppColors.error,
-                                fontSize: 12,
-                              ),
-                            ),
-                          )
-                              : SizedBox.shrink()),
-                        ],
+                      // Confirm Password Field
+                      _buildTextField(
+                        label: 'Confirm Password',
+                        hint: 'Please re-enter your password',
+                        obscureText: true,
+                        onChanged: _controller.validateConfirmPassword,
+                        error: _controller.confirmPasswordError,
                       ),
-
                       SizedBox(height: 20),
 
                       // Terms and Conditions
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  _controller.validateTerms(!_controller.agreeToTerms.value);
-                                },
-                                child: Obx(() => Container(
-                                  width: 20,
-                                  height: 20,
-                                  decoration: BoxDecoration(
-                                    color: _controller.agreeToTerms.value
-                                        ? AppColors.primary
-                                        : AppColors.background,
-                                    border: Border.all(
-                                      color: _controller.agreeToTerms.value
-                                          ? AppColors.primary
-                                          : AppColors.lightGrey,
-                                    ),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: _controller.agreeToTerms.value
-                                      ? Icon(
-                                    Icons.check,
-                                    size: 16,
-                                    color: AppColors.white,
-                                  )
-                                      : null,
-                                )),
-                              ),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text.rich(
-                                  TextSpan(
-                                    text: 'By creating an account or signing you agree to our ',
-                                    style: AppTextStyles.onboardingDescription,
-                                    children: [
-                                      TextSpan(
-                                        text: 'Terms and Conditions',
-                                        style: AppTextStyles.onboardingDescription.copyWith(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Obx(() => _controller.termsError.value.isNotEmpty
-                              ? Padding(
-                            padding: EdgeInsets.only(top: 4),
-                            child: Text(
-                              _controller.termsError.value,
-                              style: TextStyle(
-                                color: AppColors.error,
-                                fontSize: 12,
-                              ),
-                            ),
-                          )
-                              : SizedBox.shrink()),
-                        ],
-                      ),
-
+                      _buildTermsCheckbox(),
                       SizedBox(height: 30),
 
-                      // Sign Up button - FIXED THIS SECTION
-                      GestureDetector(
-                        onTap: () { // Changed from onPressed to onTap
-                          if (_controller.isFormValid()) {
-                            // Navigate to verification screen
-                            Get.toNamed('/verification');
-                          } else {
-                            // Show error message
-                            Get.snackbar(
-                              'Error',
-                              'Please fill all fields correctly',
-                              backgroundColor: AppColors.error,
-                              colorText: AppColors.white,
-                            );
-                          }
-                        },
+                      // Sign Up Button
+                      Obx(() => GestureDetector(
+                        onTap: _controller.isLoading.value
+                            ? null
+                            : () => _controller.register(), // API CALL HERE
                         child: Container(
                           width: double.infinity,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: _controller.isLoading.value
+                                ? AppColors.grey
+                                : AppColors.primary,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Center(
-                            child: Text(
+                            child: _controller.isLoading.value
+                                ? SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: AppColors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                                : Text(
                               'Sign Up',
                               style: AppTextStyles.buttonText.copyWith(
                                 color: AppColors.white,
@@ -350,11 +130,10 @@ class RegisterScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                      ),
-
+                      )),
                       SizedBox(height: 30),
 
-                      // Already have an account
+                      // Already have account?
                       GestureDetector(
                         onTap: () => Get.offAllNamed('/login'),
                         child: Text.rich(
@@ -374,7 +153,7 @@ class RegisterScreen extends StatelessWidget {
                         ),
                       ),
 
-                      // Add flexible space to push content up on smaller screens
+                      // Push content up on small screens
                       Expanded(child: SizedBox.shrink()),
                     ],
                   ),
@@ -384,6 +163,122 @@ class RegisterScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  // Reusable TextField
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+    required Function(String) onChanged,
+    required RxString error,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.onboardingDescription.copyWith(
+            fontWeight: FontWeight.w500,
+            height: 1.2,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          height: 50,
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.lightGrey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            keyboardType: keyboardType,
+            obscureText: obscureText,
+            onChanged: onChanged,
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.symmetric(horizontal: 15),
+              hintText: hint,
+              hintStyle: AppTextStyles.onboardingDescription.copyWith(
+                color: AppColors.grey,
+              ),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+        Obx(() => error.value.isNotEmpty
+            ? Padding(
+          padding: EdgeInsets.only(top: 4),
+          child: Text(
+            error.value,
+            style: TextStyle(color: AppColors.error, fontSize: 12),
+          ),
+        )
+            : SizedBox.shrink()),
+      ],
+    );
+  }
+
+  // Terms Checkbox
+  Widget _buildTermsCheckbox() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            GestureDetector(
+              onTap: () {
+                _controller.validateTerms(!_controller.agreeToTerms.value);
+              },
+              child: Obx(() => Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: _controller.agreeToTerms.value
+                      ? AppColors.primary
+                      : AppColors.background,
+                  border: Border.all(
+                    color: _controller.agreeToTerms.value
+                        ? AppColors.primary
+                        : AppColors.lightGrey,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: _controller.agreeToTerms.value
+                    ? Icon(Icons.check, size: 16, color: AppColors.white)
+                    : null,
+              )),
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text.rich(
+                TextSpan(
+                  text: 'By creating an account or signing you agree to our ',
+                  style: AppTextStyles.onboardingDescription,
+                  children: [
+                    TextSpan(
+                      text: 'Terms and Conditions',
+                      style: AppTextStyles.onboardingDescription.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        Obx(() => _controller.termsError.value.isNotEmpty
+            ? Padding(
+          padding: EdgeInsets.only(top: 4),
+          child: Text(
+            _controller.termsError.value,
+            style: TextStyle(color: AppColors.error, fontSize: 12),
+          ),
+        )
+            : SizedBox.shrink()),
+      ],
     );
   }
 }

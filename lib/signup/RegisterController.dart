@@ -1,5 +1,10 @@
-// File: lib/controllers/register_controller.dart
+// lib/controllers/register_controller.dart
+
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'api_service/api_service.dart';
+
 
 class RegisterController extends GetxController {
   // Form fields
@@ -9,79 +14,67 @@ class RegisterController extends GetxController {
   var confirmPassword = ''.obs;
   var agreeToTerms = false.obs;
 
-  // Error messages
-  var fullNameError = RxString('');
-  var emailError = RxString('');
-  var passwordError = RxString('');
-  var confirmPasswordError = RxString('');
-  var termsError = RxString('');
+  // Errors
+  var fullNameError = ''.obs;
+  var emailError = ''.obs;
+  var passwordError = ''.obs;
+  var confirmPasswordError = ''.obs;
+  var termsError = ''.obs;
 
-  // Validate full name
+  // Loading
+  var isLoading = false.obs;
+
+  // === VALIDATION ===
   void validateFullName(String value) {
-    fullName.value = value;
-    if (value.isEmpty) {
-      fullNameError.value = 'Please enter your full name';
-    } else if (value.length < 3) {
-      fullNameError.value = 'Name must be at least 3 characters';
-    } else {
-      fullNameError.value = '';
-    }
+    final trimmed = value.trim();
+    fullName.value = trimmed;
+    fullNameError.value = trimmed.isEmpty
+        ? 'Please enter your full name'
+        : trimmed.length < 3
+        ? 'Name must be at least 3 characters'
+        : '';
   }
 
-  // Validate email
   void validateEmail(String value) {
-    email.value = value;
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-
-    if (value.isEmpty) {
-      emailError.value = 'Please enter your email address';
-    } else if (!emailRegex.hasMatch(value)) {
-      emailError.value = 'Please enter a valid email address';
-    } else {
-      emailError.value = '';
-    }
+    final trimmed = value.trim();
+    email.value = trimmed;
+    // Allow modern TLDs and simple, robust email structure
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    emailError.value = trimmed.isEmpty
+        ? 'Please enter your email address'
+        : !emailRegex.hasMatch(trimmed)
+        ? 'Please enter a valid email address'
+        : '';
   }
 
-  // Validate password
   void validatePassword(String value) {
-    password.value = value;
-    if (value.isEmpty) {
-      passwordError.value = 'Please enter your password';
-    } else if (value.length < 6) {
-      passwordError.value = 'Password must be at least 6 characters';
-    } else {
-      passwordError.value = '';
-    }
-
-    // Also validate confirm password if it's not empty
+    final trimmed = value.trim();
+    password.value = trimmed;
+    passwordError.value = trimmed.isEmpty
+        ? 'Please enter your password'
+        : trimmed.length < 6
+        ? 'Password must be at least 6 characters'
+        : '';
     if (confirmPassword.value.isNotEmpty) {
       validateConfirmPassword(confirmPassword.value);
     }
   }
 
-  // Validate confirm password
   void validateConfirmPassword(String value) {
-    confirmPassword.value = value;
-    if (value.isEmpty) {
-      confirmPasswordError.value = 'Please re-enter your password';
-    } else if (value != password.value) {
-      confirmPasswordError.value = 'Passwords do not match';
-    } else {
-      confirmPasswordError.value = '';
-    }
+    final trimmed = value.trim();
+    confirmPassword.value = trimmed;
+    confirmPasswordError.value = trimmed.isEmpty
+        ? 'Please re-enter your password'
+        : trimmed != password.value
+        ? 'Passwords do not match'
+        : '';
   }
 
-  // Validate terms agreement
   void validateTerms(bool value) {
     agreeToTerms.value = value;
-    if (!value) {
-      termsError.value = 'You must agree to the Terms and Conditions';
-    } else {
-      termsError.value = '';
-    }
+    termsError.value = value ? '' : 'You must agree to the Terms and Conditions';
   }
 
-  // Check if form is valid
   bool isFormValid() {
     validateFullName(fullName.value);
     validateEmail(email.value);
@@ -101,7 +94,50 @@ class RegisterController extends GetxController {
         agreeToTerms.value;
   }
 
-  // Reset form
+  // === API CALL: DIRECTLY CALLS ApiService ===
+  Future<void> register() async {
+    if (!isFormValid()) {
+      Get.snackbar(
+        'Error',
+        'Please fill all fields correctly',
+        backgroundColor: Get.theme.colorScheme.error,
+        colorText: Get.theme.colorScheme.onError,
+      );
+      return;
+    }
+
+    isLoading.value = true;
+
+    try {
+      // API CALL HAPPENS HERE — DIRECTLY
+      await ApiService.registerUser(
+        name: fullName.value,
+        email: email.value,
+        password: password.value,
+      );
+
+      Get.snackbar(
+        'Success',
+        'Registration successful!',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+
+      // Pass the email to VerificationScreen for OTP verification
+      Get.toNamed('/verification', arguments: {'email': email.value});
+    } catch (e) {
+      Get.snackbar(
+        'Failed',
+        e.toString(),
+        backgroundColor: Get.theme.colorScheme.error,
+        colorText: Get.theme.colorScheme.onError,
+        duration: const Duration(seconds: 5),
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   void resetForm() {
     fullName.value = '';
     email.value = '';
