@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "127639352924",
+    "project_id": "tec-advantage",
+    "storage_bucket": "tec-advantage.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:127639352924:android:f0b83e45d61283892a5899",
+        "android_client_info": {
+          "package_name": "com.example.tecadvantage"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-54-Nq-_aSWN_RisH8fm28hi04vg6LWI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
