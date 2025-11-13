@@ -11,6 +11,7 @@ class ApiService {
     required String fcmToken,
   }) async {
     try {
+      
       final response = await http.post(
         Uri.parse('${ApiConfig.baseUrl}${ApiConfig.login}'),
         headers: {'Content-Type': 'application/json'},
