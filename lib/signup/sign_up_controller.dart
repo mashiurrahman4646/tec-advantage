@@ -1,9 +1,8 @@
-// File: lib/controllers/register_controller.dart
+// File: lib/signup/sign_up_controller.dart
 import 'package:get/get.dart';
-import '../signup/api_service/auth_repository.dart';
-import 'package:get/get.dart';
+import 'api_service/api_service.dart';
 
-class RegisterController extends GetxController {
+class SignUpController extends GetxController {
   // Form fields
   var fullName = ''.obs;
   var email = ''.obs;
@@ -12,9 +11,7 @@ class RegisterController extends GetxController {
   var agreeToTerms = false.obs;
 
   // Loading state
-  final loading = false.obs;
-
-  final AuthRepository _repo = AuthRepository();
+  final isLoading = false.obs;
 
   // Error messages
   var fullNameError = RxString('');
@@ -122,23 +119,24 @@ class RegisterController extends GetxController {
     termsError.value = '';
   }
 
-  Future<void> submitRegister() async {
+  Future<void> register() async {
     if (!isFormValid()) {
       Get.snackbar('Error', 'Please fill all fields correctly');
       return;
     }
-    loading.value = true;
+    isLoading.value = true;
     try {
-      await _repo.register(
+      await ApiService.registerUser(
         name: fullName.value,
         email: email.value,
         password: password.value,
       );
-      Get.offAllNamed('/registration-success');
+      // Navigate to verification with email passed as argument
+      Get.toNamed('/verification', arguments: {'email': email.value});
     } catch (e) {
       Get.snackbar('Registration failed', e.toString());
     } finally {
-      loading.value = false;
+      isLoading.value = false;
     }
   }
 }

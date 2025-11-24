@@ -61,8 +61,8 @@ class RegistrationSuccessScreen extends StatelessWidget {
                       // Continue button
                       GestureDetector(
                         onTap: () {
-                          // Navigate to login page
-                          Get.offAllNamed('/login');
+                          // Navigate to home page
+                          Get.offAllNamed('/home');
                         },
                         child: Container(
                           width: MediaQuery.of(context).size.width * 0.8,

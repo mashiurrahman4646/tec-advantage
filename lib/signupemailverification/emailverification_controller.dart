@@ -98,8 +98,7 @@ class VerificationController extends GetxController {
     isLoading.value = true;
     try {
       await VerifyEmailApiService.verifyEmail(email: email, oneTimeCode: code);
-      // Verification successful — navigate to Login screen
-      Get.offAllNamed('/login');
+      Get.off(() => RegistrationSuccessScreen());
     } catch (e) {
       Get.snackbar(
         'Verification Failed',
