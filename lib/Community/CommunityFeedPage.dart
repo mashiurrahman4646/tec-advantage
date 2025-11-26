@@ -1,24 +1,25 @@
-// community_feed_page.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:timeago/timeago.dart' as timeago;
+import 'controllers/community_feed_controller.dart';
 import 'PostDetailsPage.dart';
 
+class CommunityFeedPage extends StatelessWidget {
+  final String groupId;
+  final String groupName;
 
-class CommunityFeedPage extends StatefulWidget {
-  final String communityName;
-
-  const CommunityFeedPage({Key? key, required this.communityName}) : super(key: key);
-
-  @override
-  State<CommunityFeedPage> createState() => _CommunityFeedPageState();
-}
-
-class _CommunityFeedPageState extends State<CommunityFeedPage> {
-  final TextEditingController _postController = TextEditingController();
+  const CommunityFeedPage({
+    Key? key,
+    required this.groupId,
+    required this.groupName,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(CommunityFeedController());
+    controller.initialize(groupId, groupName);
+    final TextEditingController postController = TextEditingController();
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -29,7 +30,7 @@ class _CommunityFeedPageState extends State<CommunityFeedPage> {
           onPressed: () => Get.back(),
         ),
         title: Text(
-          'Community',
+          groupName,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -38,109 +39,215 @@ class _CommunityFeedPageState extends State<CommunityFeedPage> {
         ),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          // Post Creation Section
-          Container(
-            color: Colors.white,
-            padding: EdgeInsets.all(16),
+      body: Obx(() {
+        if (controller.isLoading.value && controller.posts.isEmpty) {
+          return Center(
+            child: CircularProgressIndicator(
+              color: Colors.black,
+            ),
+          );
+        }
+
+        if (controller.posts.isEmpty) {
+          return Center(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: _postController,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      hintText: 'Write your post or question here',
-                      hintStyle: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 14,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.all(16),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12),
-                Row(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.image_outlined,
-                          color: Colors.grey[600],
-                          size: 24,
-                        ),
-                        onPressed: () {
-                          // Handle image selection
-                        },
-                      ),
-                    ),
-                    Spacer(),
-                  ],
+                Icon(
+                  Icons.post_add_outlined,
+                  size: 64,
+                  color: Colors.grey[400],
                 ),
                 SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Handle post submission
-                      if (_postController.text.isNotEmpty) {
-                        // Add post logic here
-                        _postController.clear();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Post created successfully!'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                Text(
+                  'No posts yet',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => controller.refreshPosts(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(
-                      'Post',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                  ),
+                  child: Text(
+                    'Refresh',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ],
             ),
-          ),
+          );
+        }
 
-          // Feed Section
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              itemCount: _getFeedPosts().length,
-              itemBuilder: (context, index) {
-                return _buildFeedPost(_getFeedPosts()[index]);
-              },
-            ),
+        return RefreshIndicator(
+          onRefresh: controller.refreshPosts,
+          color: Colors.black,
+          child: Column(
+            children: [
+              // Post Creation Section
+              Container(
+                color: Colors.white,
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextField(
+                        controller: postController,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText: 'Write your post or question here',
+                          hintStyle: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 14,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.all(16),
+                        ),
+                      ),
+                    ),
+                    Obx(() {
+                      final img = controller.selectedImage.value;
+                      if (img == null) return SizedBox.shrink();
+                      return Stack(
+                        children: [
+                          Container(
+                            margin: EdgeInsets.only(top: 12),
+                            height: 120,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              image: DecorationImage(
+                                image: FileImage(img),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 16,
+                            right: 16,
+                            child: GestureDetector(
+                              onTap: () => controller.removeImage(),
+                              child: Container(
+                                padding: EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.6),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.image_outlined,
+                              color: Colors.grey[600],
+                              size: 24,
+                            ),
+                            onPressed: () {
+                              controller.pickImage();
+                            },
+                          ),
+                        ),
+                        Spacer(),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                    Obx(() => Container(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: controller.isCreatingPost.value
+                                ? null
+                                : () async {
+                                    final description =
+                                        postController.text.trim();
+                                    if (description.isNotEmpty) {
+                                      final success = await controller
+                                          .createPost(description);
+                                      if (success) {
+                                        postController.clear();
+                                      }
+                                    } else {
+                                      Get.snackbar(
+                                        'Error',
+                                        'Please write something to post',
+                                        snackPosition: SnackPosition.BOTTOM,
+                                      );
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: controller.isCreatingPost.value
+                                ? SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(
+                                    'Post',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+
+              // Feed Section
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  itemCount: controller.posts.length,
+                  itemBuilder: (context, index) {
+                    final post = controller.posts[index];
+                    return _buildFeedPost(post);
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      }),
     );
   }
 
-  Widget _buildFeedPost(Map<String, dynamic> post) {
+  Widget _buildFeedPost(post) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -166,10 +273,15 @@ class _CommunityFeedPageState extends State<CommunityFeedPage> {
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: Colors.grey[300],
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.grey[600],
-                    size: 20,
+                  child: Text(
+                    post.user.name.isNotEmpty
+                        ? post.user.name[0].toUpperCase()
+                        : 'U',
+                    style: TextStyle(
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
                 SizedBox(width: 12),
@@ -178,7 +290,9 @@ class _CommunityFeedPageState extends State<CommunityFeedPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        post['userName'],
+                        post.user.name.isNotEmpty
+                            ? post.user.name
+                            : 'Anonymous',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
@@ -186,7 +300,7 @@ class _CommunityFeedPageState extends State<CommunityFeedPage> {
                         ),
                       ),
                       Text(
-                        post['timeAgo'],
+                        _formatDateTime(post.createdAt),
                         style: TextStyle(
                           color: Colors.grey[500],
                           fontSize: 12,
@@ -205,7 +319,7 @@ class _CommunityFeedPageState extends State<CommunityFeedPage> {
 
             // Post content
             Text(
-              post['content'],
+              post.description,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.black87,
@@ -213,46 +327,52 @@ class _CommunityFeedPageState extends State<CommunityFeedPage> {
               ),
             ),
 
-            // Post images if any
-            if (post['images'] != null && post['images'].isNotEmpty) ...[
+            if (post.fullImageUrl != null) ...[
               SizedBox(height: 12),
               Container(
                 height: 200,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: post['images'].length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      width: 150,
-                      margin: EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          post['images'][index],
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.image,
-                                  color: Colors.grey[400],
-                                  size: 40,
-                                ),
-                              ),
-                            );
-                          },
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    post.fullImageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ),
-                    );
-                  },
+                        child: Center(
+                          child: Icon(
+                            Icons.image,
+                            color: Colors.grey[400],
+                            size: 40,
+                          ),
+                        ),
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: Colors.grey[200],
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                            color: Colors.black,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
@@ -263,7 +383,14 @@ class _CommunityFeedPageState extends State<CommunityFeedPage> {
             GestureDetector(
               onTap: () {
                 // Navigate to post details page
-                Get.to(() => PostDetailsPage(post: post));
+                Get.to(() => PostDetailsPage(
+                      postId: post.id,
+                      groupId: post.group.id,
+                      userName: post.user.name,
+                      timeAgo: _formatDateTime(post.createdAt),
+                      content: post.description,
+                      imageUrl: post.fullImageUrl,
+                    ));
               },
               child: Row(
                 children: [
@@ -274,7 +401,7 @@ class _CommunityFeedPageState extends State<CommunityFeedPage> {
                   ),
                   SizedBox(width: 4),
                   Text(
-                    '${post['replies']} Replies',
+                    'View Details',
                     style: TextStyle(
                       color: Colors.grey[500],
                       fontSize: 12,
@@ -289,45 +416,12 @@ class _CommunityFeedPageState extends State<CommunityFeedPage> {
     );
   }
 
-  List<Map<String, dynamic>> _getFeedPosts() {
-    return [
-      {
-        'userName': 'Mohammad Rafiul islam',
-        'timeAgo': '12:03 PM',
-        'content': 'Hi everyone I\'m planning to launch a small e-commerce business selling handmade crafts. What are some low-cost marketing strategies you\'ve tried that actually worked?',
-        'replies': 23,
-        'images': null,
-      },
-      {
-        'userName': 'Faisal rabbi',
-        'timeAgo': '1h ago',
-        'content': 'Finished, \'A little princess\' over the weekend such a powerful memoir!',
-        'replies': 23,
-        'images': [
-          'assets/images/book1.jpg',
-          'assets/images/book2.jpg',
-        ],
-      },
-      {
-        'userName': 'Sarah Ahmed',
-        'timeAgo': '3h ago',
-        'content': 'Just completed my first Flutter app! It\'s amazing how much you can accomplish with this framework. Any tips for optimizing performance?',
-        'replies': 15,
-        'images': null,
-      },
-      {
-        'userName': 'John Smith',
-        'timeAgo': '5h ago',
-        'content': 'Looking for recommendations on project management tools for small teams. What\'s working well for you?',
-        'replies': 8,
-        'images': null,
-      },
-    ];
-  }
-
-  @override
-  void dispose() {
-    _postController.dispose();
-    super.dispose();
+  String _formatDateTime(String dateTimeString) {
+    try {
+      final dateTime = DateTime.parse(dateTimeString);
+      return timeago.format(dateTime, locale: 'en_short');
+    } catch (e) {
+      return 'Just now';
+    }
   }
 }

@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../services/fcm_service.dart';
-
-import 'api_service/login_api_service.dart';  // এই লাইনটি সঠিক করুন
+import '../token_service/token_service.dart';
+import 'api_service/login_api_service.dart'; // এই লাইনটি সঠিক করুন
 
 class LoginController extends GetxController {
   var isLoading = false.obs;
@@ -14,7 +14,8 @@ class LoginController extends GetxController {
   Future<void> login() async {
     // ইনপুট চেক
     if (email.isEmpty || password.isEmpty) {
-      Get.snackbar("Error", "Please fill all fields", backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar("Error", "Please fill all fields",
+          backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
@@ -23,7 +24,8 @@ class LoginController extends GetxController {
     // FCM Token নেওয়া
     String? fcmToken = await FcmService.getAndSaveToken();
     if (fcmToken == null) {
-      Get.snackbar("Error", "Failed to get FCM Token", backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar("Error", "Failed to get FCM Token",
+          backgroundColor: Colors.red, colorText: Colors.white);
       isLoading(false);
       return;
     }
@@ -39,10 +41,20 @@ class LoginController extends GetxController {
 
     // সফল/ব্যর্থতা চেক
     if (result != null && result['success'] == true) {
-      Get.offAllNamed('/home');
-      Get.snackbar("Success", "Login Successful", backgroundColor: Colors.green, colorText: Colors.white);
+      // ✅ Token save করুন
+      final tokenSaved = await TokenService.ingestLoginResponse(result);
+
+      if (tokenSaved) {
+        Get.offAllNamed('/home');
+        Get.snackbar("Success", "Login Successful",
+            backgroundColor: Colors.green, colorText: Colors.white);
+      } else {
+        Get.snackbar("Error", "Failed to save authentication token",
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
     } else {
-      Get.snackbar("Error", result?['message'] ?? "Invalid email or password", backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar("Error", result?['message'] ?? "Invalid email or password",
+          backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 }

@@ -3,12 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../app_colors.dart';
 import '../../app_text_styles.dart';
+import 'aspiring_entrepreneur_controller.dart';
 
 class AspiringEntrepreneurAssessmentScreen extends StatelessWidget {
   const AspiringEntrepreneurAssessmentScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final args = Get.arguments;
+    final slug = (args is Map && args['slug'] is String) ? args['slug'] as String : 'aspiring-entrepreneur';
+    final c = Get.isRegistered<AspiringEntrepreneurAssessmentController>(tag: slug)
+        ? Get.find<AspiringEntrepreneurAssessmentController>(tag: slug)
+        : Get.put(AspiringEntrepreneurAssessmentController(slug: slug), tag: slug, permanent: true);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -30,150 +36,153 @@ class AspiringEntrepreneurAssessmentScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Progress text
-            Text(
-              'Question 1 of 10',
-              style: AppTextStyles.onboardingDescription.copyWith(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Progress bar
-            Container(
-              height: 6,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: Stack(
-                children: [
-                  Container(
-                    height: 6,
-                    width: MediaQuery.of(context).size.width * (1 / 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Question
-            Text(
-              'Do you already have a clear business idea you want to pursue?',
-              style: AppTextStyles.heading2.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Options
-            _buildOptionButton('Yes'),
-            const SizedBox(height: 16),
-            _buildOptionButton('No'),
-
-            const Spacer(),
-
-            // Instruction text
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Take your time to choose the answer that best represents you',
-                style: AppTextStyles.onboardingDescription.copyWith(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Navigation buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Get.back(),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+        child: Obx(() {
+          if (c.loading.value) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (c.error.value != null) {
+            return Center(child: Text(c.error.value!, style: TextStyle(color: Colors.red)));
+          }
+          if (c.questions.isEmpty) {
+            return Center(child: Text('No questions available'));
+          }
+          return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Question ${c.currentIndex.value + 1} of ${c.questions.length}',
+                        style: AppTextStyles.onboardingDescription.copyWith(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
                       ),
-                      side: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    child: Text(
-                      'Back',
-                      style: AppTextStyles.buttonText.copyWith(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 6,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: c.questions.isEmpty ? 0 : (c.currentIndex.value + 1) / c.questions.length,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // For demo purposes, navigate to results screen
-                      Get.toNamed('/aspiring-entrepreneur-results', arguments: {'type': 'builder'});
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      const SizedBox(height: 24),
+                      Text(
+                        ((c.questions[c.currentIndex.value]['questionText'] as String?) ?? '').trim(),
+                        style: AppTextStyles.heading2.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      'Next',
-                      style: AppTextStyles.buttonText.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(height: 32),
+                      ..._buildOptions(c, (((c.questions[c.currentIndex.value]['answers'] as List<dynamic>?) ?? const []).cast<String>())),
+                      const Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'Take your time to choose the answer that best represents you',
+                          style: AppTextStyles.onboardingDescription.copyWith(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Get.back(),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                side: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              child: Text(
+                                'Back',
+                                style: AppTextStyles.buttonText.copyWith(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: c.selectedIndex.value != null ? c.next : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    c.currentIndex.value < c.questions.length - 1 ? 'Next' : 'Submit',
+                                    style: AppTextStyles.buttonText.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Icon(Icons.arrow_forward, size: 18),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+        }),
       ),
     );
   }
 
-  Widget _buildOptionButton(String text) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: () {
-          // Handle option selection
-        },
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+  List<Widget> _buildOptions(AspiringEntrepreneurAssessmentController c, List<String> answers) {
+    return List.generate(answers.length, (i) {
+      final isSelected = c.selectedIndex.value == i;
+      return Padding(
+        padding: EdgeInsets.only(bottom: i == answers.length - 1 ? 0 : 16),
+        child: SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () => c.selectAnswer(i),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              side: BorderSide(color: isSelected ? AppColors.primary : Colors.grey.shade300),
+              backgroundColor: Colors.white,
+            ),
+            child: Text(
+              answers[i],
+              style: AppTextStyles.buttonText.copyWith(
+                color: Colors.black,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-          side: BorderSide(color: Colors.grey.shade300),
-          backgroundColor: Colors.white,
         ),
-        child: Text(
-          text,
-          style: AppTextStyles.buttonText.copyWith(
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
+      );
+    });
   }
 }

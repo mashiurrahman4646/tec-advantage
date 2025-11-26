@@ -1,4 +1,5 @@
 // home_ui.dart
+import 'package:business_onboarding_app/success_path_assessment/success_path_assessment.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -6,6 +7,7 @@ import '../ Business Planning/business planning exm/business planning exm.dart';
 import '../Coaching Page/welcome to coaching page/welcome_to_coaching_page.dart';
 import '../Community/Community.dart';
 import '../Mock Interviews Pages/mock interview quc/mocquc.dart';
+import '../Mock Interviews Pages/welcome to mock interview page/welcome_to_mock_interview_page.dart';
 import '../Terms & Conditions/Terms & Conditions.dart';
 import '../app_colors.dart';
 import '../app_text_styles.dart';
@@ -15,6 +17,7 @@ import '../notification/notification_setting.dart';
  // Add this import for notification page
 import '../small business exm/small business exm/small business exm.dart';
 import '../user_profile/user profile dart.dart';
+import '../token_service/token_service.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -215,8 +218,7 @@ class HomePage extends StatelessWidget {
               title: 'Small Business',
               description: 'Tell us about your business and unlock a free personalized assessment with tailored recommendations to help you grow.',
               onTap: () {
-                // Navigate to small business assessment
-                Get.to(() => BusinessAssessmentScreen());
+                Get.toNamed('/success-path-welcome', arguments: {'slug': 'small-business'});
               },
             ),
 
@@ -235,8 +237,7 @@ class HomePage extends StatelessWidget {
               title: 'Mock Interviews',
               description: 'Practice real interview questions and get instant feedback to sharpen your skills.',
               onTap: () {
-                // Navigate to mock interviews assessment
-                Get.to(() => MockInterviewAssessment());
+                Get.to(() => const MockInterviewWelcomeScreen());
               },
             ),
 
@@ -362,7 +363,8 @@ class HomePage extends StatelessWidget {
               GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
-                  // Handle logout
+                  TokenService.clearToken();
+                  Get.offAllNamed('/login');
                 },
                 child: Container(
                   width: double.infinity,

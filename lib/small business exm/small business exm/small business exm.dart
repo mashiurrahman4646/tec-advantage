@@ -3,28 +3,22 @@ import 'package:get/get.dart';
 
 import '../../app_colors.dart';
 import '../../app_text_styles.dart';
-import '../small business assessment result/small business assessment.dart';
+import 'business_assessment_controller.dart';
+import '../completed assessment/completed_assessment.dart';
 
 
-class BusinessAssessmentScreen extends StatefulWidget {
-  @override
-  _BusinessAssessmentScreenState createState() => _BusinessAssessmentScreenState();
-}
-
-class _BusinessAssessmentScreenState extends State<BusinessAssessmentScreen> {
-  // Question 1 (radio)
-  String? businessTypeValue;
-
-  // Question 2 (radio)
-  String? hasCrmValue;
-
-  // Question 3 (radio)
-  String? toolsValue;
+class BusinessAssessmentScreen extends StatelessWidget {
+  const BusinessAssessmentScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
+    final args = Get.arguments;
+    final section = (args is Map && args['section'] is String) ? args['section'] as String : 'business-overview';
+    final c = Get.isRegistered<BusinessAssessmentController>(tag: section)
+        ? Get.find<BusinessAssessmentController>(tag: section)
+        : Get.put(BusinessAssessmentController(section: section), tag: section, permanent: true);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -41,192 +35,147 @@ class _BusinessAssessmentScreenState extends State<BusinessAssessmentScreen> {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 16.0 : 24.0,
-          vertical: 16.0,
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: MediaQuery.of(context).size.height -
-                AppBar().preferredSize.height -
-                MediaQuery.of(context).padding.top,
+      body: Obx(() {
+        if (c.loading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (c.error.value != null) {
+          return Center(child: Text(c.error.value!, style: const TextStyle(color: Colors.red)));
+        }
+        return SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 16.0 : 24.0,
+            vertical: 16.0,
           ),
-          child: IntrinsicHeight(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Business Assessment',
-                  style: AppTextStyles.heading1,
-                ),
-                const SizedBox(height: 12),
-                LinearProgressIndicator(
-                  value: 0.33,
-                  minHeight: 6,
-                  backgroundColor: AppColors.lightGrey,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Business Overview',
-                  style: AppTextStyles.heading2,
-                ),
-                const SizedBox(height: 24),
-
-                // Question 1
-                _buildQuestion(
-                  '1. What type of business do you run?',
-                  _buildRadioOptions(
-                    [
-                      'Service-based',
-                      'Product-based',
-                      'Hybrid',
-                      'Non-profit',
-                      'Other'
-                    ],
-                    businessTypeValue,
-                        (value) {
-                      setState(() {
-                        businessTypeValue = value;
-                      });
-                    },
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height -
+                  AppBar().preferredSize.height -
+                  MediaQuery.of(context).padding.top,
+            ),
+            child: IntrinsicHeight(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Business Assessment',
+                    style: AppTextStyles.heading1,
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // Question 2
-                _buildQuestion(
-                  '2. Do you currently have a CRM or business management system?',
-                  _buildRadioOptions(
-                    ['Yes', 'No'],
-                    hasCrmValue,
-                        (value) {
-                      setState(() {
-                        hasCrmValue = value;
-                      });
-                    },
+                  const SizedBox(height: 12),
+                  LinearProgressIndicator(
+                    value: c.progress,
+                    minHeight: 6,
+                    backgroundColor: AppColors.lightGrey,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    borderRadius: BorderRadius.circular(3),
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // Question 3
-                _buildQuestion(
-                  '3. What tools do you currently use?',
-                  _buildRadioOptions(
-                    [
-                      'Spreadsheets',
-                      'QuickBooks',
-                      'Email/Calendar',
-                      'Social Media',
-                      'Basic Website',
-                      'Other'
-                    ],
-                    toolsValue,
-                        (value) {
-                      setState(() {
-                        toolsValue = value;
-                      });
-                    },
+                  const SizedBox(height: 24),
+                  Text(
+                    section.replaceAll('-', ' ').split(' ').map((w) => w[0].toUpperCase() + w.substring(1)).join(' '),
+                    style: AppTextStyles.heading2,
                   ),
-                ),
-                const Spacer(),
-
-                // Navigation Buttons
-                Padding(
-                  padding: const EdgeInsets.only(top: 32, bottom: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      OutlinedButton(
-                        onPressed: () => Get.back(),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 12,
+                  const SizedBox(height: 24),
+                  ...List.generate(c.visibleQuestions.length, (localIndex) {
+                    final q = c.visibleQuestions[localIndex];
+                    final int qIndex = c.startIndex + localIndex;
+                    final String qText = (q['questionText'] as String?) ?? '';
+                    final List<Map<String, dynamic>> answers = ((q['answers'] as List<dynamic>? ?? [])
+                        .map((e) => (e as Map).cast<String, dynamic>()))
+                        .toList();
+                    final selectedValue = c.selected[qIndex];
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${qIndex + 1}. $qText',
+                          style: AppTextStyles.bodyText.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(height: 12),
+                        Column(
+                          children: answers.map((ans) {
+                            final optionText = (ans['text'] as String?) ?? '';
+                            return Row(
+                              children: [
+                                Radio<String>(
+                                  value: optionText,
+                                  groupValue: selectedValue,
+                                  onChanged: (v) {
+                                    if (v != null) c.selectAnswer(qIndex, v);
+                                  },
+                                  activeColor: AppColors.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(optionText, style: AppTextStyles.bodyText),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    );
+                  }),
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 32, bottom: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () {
+                            if (c.isFirstPage) {
+                              Get.back();
+                            } else {
+                              c.prevPage();
+                            }
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 12,
+                            ),
+                            side: BorderSide(color: AppColors.primary),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
-                          side: BorderSide(color: AppColors.primary),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                          child: Text(
+                            'Back',
+                            style: AppTextStyles.buttonText.copyWith(color: AppColors.primary),
                           ),
                         ),
-                        child: Text(
-                          'Back',
-                          style: AppTextStyles.buttonText.copyWith(color: AppColors.primary),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Navigate to assessment result screen
-                          Get.to(() => AssessmentResultScreen(
-                            score: 4/20,
-                            recommendations: [
-                              'add automations for X',
-                              'connect Y to Z',
-                              '1 coaching session to lock a simple process',
-                            ],
-                          ));
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 12,
+                        ElevatedButton(
+                          onPressed: () {
+                            if (!c.isLastPage) {
+                              c.nextPage();
+                            } else {
+                              final value = c.totalScore;
+                              Get.to(() => SmallBusinessCongratulationsScreen(), arguments: {'value': value});
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                          child: Text(
+                            c.isLastPage ? 'Finish' : 'Next',
+                            style: AppTextStyles.buttonText,
                           ),
                         ),
-                        child: Text(
-                          'Next',
-                          style: AppTextStyles.buttonText,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuestion(String question, Widget options) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          question,
-          style: AppTextStyles.bodyText.copyWith(fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 12),
-        options,
-      ],
-    );
-  }
-
-  Widget _buildRadioOptions(List<String> options, String? selectedValue, Function(String?) onChanged) {
-    return Column(
-      children: options.map((option) {
-        return Row(
-          children: [
-            Radio<String>(
-              value: option,
-              groupValue: selectedValue,
-              onChanged: onChanged,
-              activeColor: AppColors.primary,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              option,
-              style: AppTextStyles.bodyText,
-            ),
-          ],
         );
-      }).toList(),
+      }),
     );
   }
 }

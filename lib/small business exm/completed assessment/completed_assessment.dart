@@ -3,10 +3,11 @@ import 'package:get/get.dart'; // Make sure to add get package in your pubspec.y
 import '../../app_colors.dart';
 import '../../app_text_styles.dart';
 import '../small business exm/small business exm.dart';
+import '../small business assessment result/small business assessment.dart';
 
 
-class SmallBusinessMeetingScreen extends StatelessWidget {
-  const SmallBusinessMeetingScreen({Key? key}) : super(key: key);
+class SmallBusinessCongratulationsScreen extends StatelessWidget {
+  const SmallBusinessCongratulationsScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +65,9 @@ class SmallBusinessMeetingScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Get.to(() => BusinessAssessmentScreen());
+                    final args = Get.arguments;
+                    final int value = (args is Map && args['value'] is int) ? args['value'] as int : 0;
+                    Get.to(() => AssessmentResultScreen(value: value));
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,

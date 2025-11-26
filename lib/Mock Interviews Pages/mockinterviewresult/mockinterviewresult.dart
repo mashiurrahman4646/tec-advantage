@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../Coaching Page/welcome to coaching page/welcome_to_coaching_page.dart';
+import 'mock_interview_results_controller.dart';
 
 class MockInterviewResults extends StatelessWidget {
   const MockInterviewResults({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final c = Get.isRegistered<MockInterviewResultsController>()
+        ? Get.find<MockInterviewResultsController>()
+        : Get.put(MockInterviewResultsController(), permanent: true);
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
@@ -52,7 +56,6 @@ class MockInterviewResults extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Coach's Advice Section
                   Container(
                     width: double.infinity,
                     child: Column(
@@ -68,15 +71,23 @@ class MockInterviewResults extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 16),
-                        Text(
-                          'Your responses suggest you may struggle in interviews. Many of your answers were not the best approach. The good news? Interviews are a skill you can practice and master.',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black87,
-                            height: 1.5,
-                          ),
-                        ),
+                        Obx(() {
+                          if (c.loading.value) {
+                            return const Text('Loading results...', style: TextStyle(fontSize: 16));
+                          }
+                          if (c.error.value != null) {
+                            return Text(c.error.value!, style: const TextStyle(color: Colors.red));
+                          }
+                          return Text(
+                            c.recommendationText.value ?? 'No recommendation available',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black87,
+                              height: 1.5,
+                            ),
+                          );
+                        }),
                         SizedBox(height: 24),
                         Text(
                           'Recommendations:',
@@ -87,10 +98,9 @@ class MockInterviewResults extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 12),
-                        // Bullet points
                         _buildBulletPoint('Book a 1:1 Mock Interview Coaching Session.'),
-                        _buildBulletPoint('Focus on storytelling frameworks (STAR: Situation, Task, Action, Result).'),
-                        _buildBulletPoint('Review behavioral answers for stronger structure.'),
+                        _buildBulletPoint('Use STAR: Situation, Task, Action, Result for answers.'),
+                        _buildBulletPoint('Practice behavioral questions with feedback.'),
                       ],
                     ),
                   ),

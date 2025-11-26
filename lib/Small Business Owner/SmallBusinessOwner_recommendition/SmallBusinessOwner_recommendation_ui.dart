@@ -7,14 +7,14 @@ import '../../app_text_styles.dart';
 import '../../small business exm/completed assessment/completed_assessment.dart';
  // Import the new screen
 
-class SmallBusinessResultsScreen extends StatelessWidget {
-  final String resultType; // 'basics', 'growth', or 'scale'
-
-  const SmallBusinessResultsScreen({Key? key, required this.resultType}) : super(key: key);
+class SuccessPathResultsScreen extends StatelessWidget {
+  const SuccessPathResultsScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Define content based on result type
+    final args = Get.arguments;
+    final Map<String, dynamic>? apiData = args is Map ? args['apiData'] as Map<String, dynamic>? : null;
+    final String? typeArg = args is Map ? args['type'] as String? : null;
     final Map<String, Map<String, dynamic>> content = {
       'basics': {
         'title': "You're Building the Basics",
@@ -59,7 +59,8 @@ class SmallBusinessResultsScreen extends StatelessWidget {
       }
     };
 
-    final currentContent = content[resultType]!;
+    final Map<String, dynamic>? currentApi = apiData;
+    final String selectedKey = (typeArg != null && (typeArg == 'basics' || typeArg == 'growth' || typeArg == 'scale')) ? typeArg : 'basics';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -87,7 +88,7 @@ class SmallBusinessResultsScreen extends StatelessWidget {
           children: [
             // Main title
             Text(
-              currentContent['title'] as String,
+              currentApi != null ? (currentApi['begineerData'] as String? ?? 'Results') : (content[selectedKey]!['title'] as String),
               style: AppTextStyles.heading2.copyWith(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -98,7 +99,7 @@ class SmallBusinessResultsScreen extends StatelessWidget {
 
             // Subtitle
             Text(
-              currentContent['subtitle'] as String,
+              currentApi != null ? (currentApi['IntermediateData'] as String? ?? '') : (content[selectedKey]!['subtitle'] as String),
               style: AppTextStyles.onboardingDescription.copyWith(
                 fontSize: 16,
                 color: Colors.grey[700],
@@ -117,7 +118,10 @@ class SmallBusinessResultsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            ...(currentContent['findings'] as List<String>).map((finding) =>
+            ...(currentApi != null ? <String>[
+              currentApi['range']?.toString() ?? '',
+              currentApi['proData']?.toString() ?? '',
+            ] : (content[selectedKey]!['findings'] as List<String>)).map((finding) =>
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: Row(
@@ -151,7 +155,9 @@ class SmallBusinessResultsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            ...(currentContent['recommendations'] as List<String>).map((recommendation) =>
+            ...(currentApi != null ? <String>[
+              currentApi['proData']?.toString() ?? '',
+            ] : (content[selectedKey]!['recommendations'] as List<String>)).map((recommendation) =>
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: Row(
@@ -180,7 +186,7 @@ class SmallBusinessResultsScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   // Navigate to the new screen
-                  Get.to(() => SmallBusinessMeetingScreen());
+                  Get.to(() => SmallBusinessCongratulationsScreen());
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,

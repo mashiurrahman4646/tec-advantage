@@ -13,13 +13,13 @@ class SuccessPathSelectionController extends GetxController {
 
     switch (selectedPath.value) {
       case 'Small Business Owner':
-        Get.toNamed('/small-business-assessment');
+        Get.toNamed('/success-path-assessment', arguments: {'slug': 'small-business'});
         break;
       case 'Aspiring Entrepreneur':
-        Get.toNamed('/aspiring-entrepreneur-assessment');
+        Get.toNamed('/success-path-assessment', arguments: {'slug': 'aspiring-entrepreneur'});
         break;
       case 'Looking to Get Into Tech':
-        Get.toNamed('/tech-career-assessment');
+        Get.toNamed('/success-path-assessment', arguments: {'slug': 'looking-to-get-into-tech'});
         break;
     }
   }

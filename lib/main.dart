@@ -8,6 +8,7 @@ import 'dart:io' show Platform;
 
 import 'package:business_onboarding_app/success_path_assessment/success_path_assessment.dart';
 import 'package:business_onboarding_app/success_path_assessment/sucess_path_assessment_controller.dart';
+import 'success_path_assessment/success_path_welcome.dart';
 import 'AspiringEntrepreneur/AspiringEntrepreneur_recommendation/AspiringEntrepreneur_recommendation_ui.dart';
 import 'AspiringEntrepreneur/AspiringEntrepreneur_test/aspiringenterpreneure_test_ui.dart';
 import 'LookingtoGetIntoTech/LookingtoGetIntoTech_recommendation/LookingtoGetIntoTech_recommendation_ui.dart';
@@ -24,6 +25,7 @@ import 'onbording/onbording_ui.dart';
 import 'signup/RegisterScreen .dart';
 import 'signupemailverification/emailverification_ui.dart';
 import 'signupemailverification/RegistrationSuccessScreen.dart';
+import 'token_service/token_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,10 +59,13 @@ void main() async {
     sound: true,
   );
 
-  runApp(MyApp());
+  final bool hasSession = await TokenService.hasToken();
+  runApp(MyApp(initialRoute: hasSession ? '/home' : '/onboarding'));
 }
 
 class MyApp extends StatelessWidget {
+  final String initialRoute;
+  MyApp({super.key, this.initialRoute = '/onboarding'});
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
@@ -93,7 +98,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: '/onboarding',
+      initialRoute: initialRoute,
       getPages: [
         GetPage(name: '/onboarding', page: () => OnboardingScreen(), transition: Transition.fade),
         GetPage(name: '/login', page: () => LoginScreen(), transition: Transition.rightToLeft),
@@ -112,12 +117,9 @@ class MyApp extends StatelessWidget {
             Get.lazyPut(() => SuccessPathSelectionController());
           }),
         ),
-        GetPage(name: '/small-business-assessment', page: () => SmallBusinessAssessmentScreen(), transition: Transition.rightToLeft),
-        GetPage(name: '/small-business-results', page: () => SmallBusinessResultsScreen(resultType: Get.arguments['type'] ?? 'basics'), transition: Transition.rightToLeft),
-        GetPage(name: '/aspiring-entrepreneur-assessment', page: () => AspiringEntrepreneurAssessmentScreen(), transition: Transition.rightToLeft),
-        GetPage(name: '/aspiring-entrepreneur-results', page: () => AspiringEntrepreneurResultsScreen(resultType: Get.arguments['type'] ?? 'explorer'), transition: Transition.rightToLeft),
-        GetPage(name: '/tech-career-assessment', page: () => TechCareerAssessmentScreen(), transition: Transition.rightToLeft),
-        GetPage(name: '/tech-career-results', page: () => TechCareerResultsScreen(resultType: Get.arguments['type'] ?? 'beginner'), transition: Transition.rightToLeft),
+        GetPage(name: '/success-path-welcome', page: () => SuccessPathWelcomeScreen(), transition: Transition.rightToLeft),
+        GetPage(name: '/success-path-assessment', page: () => SuccessPathAssessmentScreen(), transition: Transition.rightToLeft),
+        GetPage(name: '/success-path-results', page: () => SuccessPathResultsScreen(), transition: Transition.rightToLeft),
       ],
       debugShowCheckedModeBanner: false,
       defaultTransition: Transition.fade,

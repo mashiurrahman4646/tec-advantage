@@ -28,6 +28,12 @@ dependencies:
   # Google Fonts for Inter font family
   google_fonts: ^6.1.0
 
+  # Time formatting
+  timeago: ^3.6.1
+
+  # Image picker
+  image_picker: ^1.0.7
+
   # UI Icons
   cupertino_icons: ^1.0.2
 

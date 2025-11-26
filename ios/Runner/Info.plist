@@ -54,6 +54,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to select images for posts</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to take photos for posts</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need access to save images to your photo library</string>
 	<key>com.erc.tecadvantage</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 </dict>

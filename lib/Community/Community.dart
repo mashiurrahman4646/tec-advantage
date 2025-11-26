@@ -1,22 +1,16 @@
-// community_page.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../app_colors.dart';
 import '../app_text_styles.dart';
+import 'controllers/community_controller.dart';
 import 'CommunityFeedPage.dart';
-// Import the feed page
 
-class CommunityPage extends StatefulWidget {
+class CommunityPage extends StatelessWidget {
   const CommunityPage({Key? key}) : super(key: key);
 
   @override
-  State<CommunityPage> createState() => _CommunityPageState();
-}
-
-class _CommunityPageState extends State<CommunityPage> {
-
-  @override
   Widget build(BuildContext context) {
+    final controller = Get.put(CommunityController());
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -36,43 +30,83 @@ class _CommunityPageState extends State<CommunityPage> {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.85,
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return Center(
+            child: CircularProgressIndicator(
+              color: Colors.black,
+            ),
+          );
+        }
+
+        if (controller.groups.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.group_outlined,
+                  size: 64,
+                  color: Colors.grey[400],
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'No groups available',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => controller.refreshGroups(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Refresh',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: controller.refreshGroups,
+          color: Colors.black,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.85,
+              ),
+              itemCount: controller.groups.length,
+              itemBuilder: (context, index) {
+                final group = controller.groups[index];
+                return _buildCommunityCard(group);
+              },
+            ),
           ),
-          itemCount: 6, // Show 6 community cards
-          itemBuilder: (context, index) {
-            return _buildCommunityCard(index);
-          },
-        ),
-      ),
+        );
+      }),
     );
   }
 
-  Widget _buildCommunityCard(int index) {
-    // Define the two images that alternate
-    List<String> images = [
-      'assets/images/tech_room.png', // Tech room image
-      'assets/images/startup_room.png', // Startup room image
-    ];
-
-    List<String> communityNames = [
-      'Tech Community',
-      'Startup Community',
-    ];
-
-    String imagePath = images[index % 2];
-    String communityName = communityNames[index % 2];
-
+  Widget _buildCommunityCard(group) {
     return GestureDetector(
       onTap: () {
-        // Navigate to community feed page when tapped
-        Get.to(() => CommunityFeedPage(communityName: communityName));
+        Get.to(() => CommunityFeedPage(
+              groupId: group.id,
+              groupName: group.name,
+            ));
       },
       child: Container(
         decoration: BoxDecoration(
@@ -105,26 +139,39 @@ class _CommunityPageState extends State<CommunityPage> {
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
                   ),
-                  child: Image.asset(
-                    imagePath,
+                  child: Image.network(
+                    group.fullImageUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
-                      // Fallback if image doesn't exist
                       return Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: index % 2 == 0
-                                ? [Color(0xFF5BA3D4), Color(0xFF4A90C2)]
-                                : [Color(0xFFE17C5A), Color(0xFFD86545)],
+                            colors: [Color(0xFF5BA3D4), Color(0xFF4A90C2)],
                           ),
                         ),
                         child: Center(
                           child: Icon(
-                            index % 2 == 0 ? Icons.computer : Icons.business,
+                            Icons.group,
                             color: Colors.white,
                             size: 40,
+                          ),
+                        ),
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: Colors.grey[200],
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                            color: Colors.black,
+                            strokeWidth: 2,
                           ),
                         ),
                       );
@@ -134,35 +181,43 @@ class _CommunityPageState extends State<CommunityPage> {
               ),
             ),
 
-            // Bottom Section with Company Info
+            // Bottom Section with Group Info
             Container(
               padding: EdgeInsets.all(12),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Company Icon
-                  Container(
-                    padding: EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(4),
+                  Text(
+                    group.name,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
-                    child: Icon(
-                      Icons.business,
-                      size: 16,
-                      color: Colors.grey[700],
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(width: 8),
-                  // Company Name
-                  Expanded(
-                    child: Text(
-                      'Aspiring Business Solution',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[700],
+                  SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.person_outline,
+                        size: 14,
+                        color: Colors.grey[600],
                       ),
-                    ),
+                      SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          group.createdBy.name,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

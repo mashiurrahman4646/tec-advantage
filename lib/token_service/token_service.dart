@@ -9,7 +9,7 @@ class TokenService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyAuthToken, token);
     // Debug log
-    // print('[TOKEN] Saved');
+    print('[TOKEN] Saved: ${token.substring(0, 20)}...');
   }
 
   // Saved token read
@@ -33,10 +33,13 @@ class TokenService {
   // Protected API headers build
   static Future<Map<String, String>> authHeaders() async {
     final token = await readToken();
-    if (token == null || token.isEmpty) return {};
+    if (token == null || token.isEmpty) {
+      print('[TOKEN] No token found in storage');
+      return {};
+    }
+    print('[TOKEN] Using token: ${token.substring(0, 20)}...');
     return {
       'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
     };
   }
 
@@ -104,7 +107,9 @@ class TokenService {
     if (data is String && data.isNotEmpty) {
       return data;
     }
-    if (data is Map && data['token'] is String && (data['token'] as String).isNotEmpty) {
+    if (data is Map &&
+        data['token'] is String &&
+        (data['token'] as String).isNotEmpty) {
       return data['token'] as String;
     }
     return null;
@@ -114,9 +119,13 @@ class TokenService {
   static Future<bool> ingestLoginResponse(Map<String, dynamic> result) async {
     final token = extractToken(result);
     if (token != null && token.isNotEmpty) {
+      print(
+          '[TOKEN] Extracted from login response: ${token.substring(0, 20)}...');
       await saveToken(token);
       return true;
     }
+    print('[TOKEN] Failed to extract token from response');
+    print('[TOKEN] Response keys: ${result.keys.toList()}');
     return false;
   }
 }

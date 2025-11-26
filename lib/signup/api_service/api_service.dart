@@ -1,9 +1,8 @@
 // lib/services/api_service.dart
 
-import 'dart:convert';
 import 'dart:async';
-import 'package:http/http.dart' as http;
 import '../../config_service.dart';
+import '../../services/network_caller.dart';
 
 
 class ApiService {
@@ -12,36 +11,17 @@ class ApiService {
     required String email,
     required String password,
   }) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.user}');
-
+    final caller = NetworkCaller(timeout: const Duration(seconds: 15));
     try {
-      // Log request
-      print('[REGISTER] POST ${url.toString()}');
-      print('[REGISTER] Payload: {name: $name, email: $email, password: ******}');
-
-      final response = await http
-          .post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'name': name,
-          'email': email,
-          'password': password,
-        }),
-      )
-          .timeout(const Duration(seconds: 15));
-
-      // Log response
-      print('[REGISTER] Status: ${response.statusCode}');
-      print('[REGISTER] Body: ${response.body}');
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return data is Map<String, dynamic> ? data : {};
-      } else {
-        throw data['message'] ?? 'Registration failed';
+      final res = await caller.post(ApiConfig.user, body: {
+        'name': name,
+        'email': email,
+        'password': password,
+      });
+      if (res.isSuccess) {
+        return res.responseData ?? {};
       }
+      throw res.errorMessage;
     } on TimeoutException {
       throw 'Request timed out. Please try again.';
     } catch (e) {

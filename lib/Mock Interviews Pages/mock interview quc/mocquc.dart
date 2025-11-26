@@ -2,38 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../mockinterviewresult/mockinterviewresult.dart';
+import 'mock_interview_controller.dart';
 
-class MockInterviewAssessment extends StatefulWidget {
+class MockInterviewAssessment extends StatelessWidget {
   const MockInterviewAssessment({Key? key}) : super(key: key);
 
   @override
-  _MockInterviewAssessmentState createState() => _MockInterviewAssessmentState();
-}
-
-class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
-  int? _selectedAnswerIndex;
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-
-  // Sample questions data - just one question for demo
-  final List<Map<String, dynamic>> _questions = [
-    {
-      'question': 'Tell me about yourself ?',
-      'answers': [
-        'I\'ve been working in business analysis for 5 years, mostly with cloud cost optimization, and I enjoy using data to drive decisions.',
-        'I\'m a detail-oriented professional with strong teamwork skills and a passion for problem solving.',
-        'I studied IT management, then transitioned into business systems roles where I learned to manage projects.',
-      ],
-    },
-  ];
-
-  @override
   Widget build(BuildContext context) {
+    final c = Get.isRegistered<MockInterviewController>()
+        ? Get.find<MockInterviewController>()
+        : Get.put(MockInterviewController(), permanent: true);
+    final pageController = PageController();
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Custom App Bar with Progress - exactly like Figma
           Container(
             padding: EdgeInsets.only(
               top: MediaQuery.of(context).padding.top + 8,
@@ -44,7 +28,6 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
             color: Colors.white,
             child: Column(
               children: [
-                // Header with back button and title
                 Container(
                   height: 48,
                   child: Row(
@@ -66,29 +49,29 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                      SizedBox(width: 40), // Balance the back button
+                      SizedBox(width: 40),
                     ],
                   ),
                 ),
 
                 SizedBox(height: 16),
 
-                // Question counter
                 Container(
                   width: double.infinity,
-                  child: Text(
-                    'Question ${_currentPage + 1} to ${_questions.length}',
+                  child: Obx(() => Text(
+                    c.loading.value || c.questions.isEmpty
+                        ? 'Loading questions...'
+                        : 'Question ${c.currentPage.value + 1} to ${c.questions.length}',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                       color: Colors.black87,
                     ),
-                  ),
+                  )),
                 ),
 
                 SizedBox(height: 12),
 
-                // Progress bar - exactly like Figma
                 Container(
                   height: 4,
                   width: double.infinity,
@@ -96,16 +79,16 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
                     color: Color(0xFFE0E0E0),
                     borderRadius: BorderRadius.circular(2),
                   ),
-                  child: FractionallySizedBox(
+                  child: Obx(() => FractionallySizedBox(
                     alignment: Alignment.centerLeft,
-                    widthFactor: (_currentPage + 1) / _questions.length,
+                    widthFactor: c.questions.isEmpty ? 0 : (c.currentPage.value + 1) / c.questions.length,
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                  ),
+                  )),
                 ),
 
                 SizedBox(height: 24),
@@ -113,21 +96,21 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
             ),
           ),
 
-          // Content
           Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: _questions.length,
-              onPageChanged: (int page) {
-                setState(() {
-                  _currentPage = page;
-                  _selectedAnswerIndex = null;
-                });
-              },
-              itemBuilder: (context, index) {
-                return _buildQuestionPage(_questions[index]);
-              },
-            ),
+            child: Obx(() => c.loading.value
+                ? Center(child: CircularProgressIndicator())
+                : (c.error.value != null
+                    ? Center(child: Text(c.error.value!, style: TextStyle(color: Colors.red)))
+                    : PageView.builder(
+                        controller: pageController,
+                        itemCount: c.questions.length,
+                        onPageChanged: (int page) {
+                          c.onPageChanged(page);
+                        },
+                        itemBuilder: (context, index) {
+                          return _buildQuestionPage(c, c.questions[index]);
+                        },
+                      ))),
           ),
         ],
       ),
@@ -147,13 +130,12 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
         child: SafeArea(
           child: Row(
             children: [
-              // Back button
               Expanded(
                 child: Container(
                   height: 48,
                   child: OutlinedButton(
-                    onPressed: _currentPage > 0 ? () {
-                      _pageController.previousPage(
+                    onPressed: c.currentPage.value > 0 ? () {
+                      pageController.previousPage(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
                       );
@@ -178,26 +160,25 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
                 ),
               ),
               const SizedBox(width: 12),
-
-              // Next/Submit button
               Expanded(
                 child: Container(
                   height: 48,
-                  child: ElevatedButton(
-                    onPressed: _selectedAnswerIndex != null ? () {
-                      if (_currentPage < _questions.length - 1) {
-                        _pageController.nextPage(
+                  child: Obx(() => ElevatedButton(
+                    onPressed: c.canProceed ? () {
+                      c.selectedIndices[c.currentPage.value] = c.selectedIndex.value;
+                      if (c.currentPage.value < c.questions.length - 1) {
+                        pageController.nextPage(
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
                         );
                       } else {
-                        // Navigate to results page
-                        Get.to(() => MockInterviewResults());
+                        final total = c.computeTotalScore();
+                        Get.to(() => const MockInterviewResults(), arguments: {'score': total});
                       }
                     } : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _selectedAnswerIndex != null ? Colors.black : Colors.grey[300],
-                      foregroundColor: _selectedAnswerIndex != null ? Colors.white : Colors.grey[500],
+                      backgroundColor: c.canProceed ? Colors.black : Colors.grey[300],
+                      foregroundColor: c.canProceed ? Colors.white : Colors.grey[500],
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
@@ -206,13 +187,13 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          _currentPage < _questions.length - 1 ? 'Next' : 'Submit',
+                        Obx(() => Text(
+                          c.currentPage.value < c.questions.length - 1 ? 'Next' : 'Submit',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
-                        ),
+                        )),
                         const SizedBox(width: 6),
                         Icon(
                           Icons.arrow_forward,
@@ -220,7 +201,7 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
                         ),
                       ],
                     ),
-                  ),
+                  )),
                 ),
               ),
             ],
@@ -230,13 +211,12 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
     );
   }
 
-  Widget _buildQuestionPage(Map<String, dynamic> questionData) {
-    return SingleChildScrollView(
+  Widget _buildQuestionPage(MockInterviewController c, Map<String, dynamic> questionData) {
+    return Obx(() => SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Question - exactly matching Figma typography
           Text(
             questionData['question'],
             style: const TextStyle(
@@ -247,17 +227,13 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // Answer options - exactly matching Figma cards
-          ...List.generate(questionData['answers'].length, (index) {
-            final isSelected = _selectedAnswerIndex == index;
+          ...List.generate((questionData['answers'] as List).length, (index) {
+            final isSelected = c.selectedIndex.value == index;
             return Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: GestureDetector(
                 onTap: () {
-                  setState(() {
-                    _selectedAnswerIndex = index;
-                  });
+                  c.selectAnswer(index);
                 },
                 child: Container(
                   width: double.infinity,
@@ -286,7 +262,9 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
                     ],
                   ),
                   child: Text(
-                    questionData['answers'][index],
+                    (questionData['answers'][index] is Map
+                        ? questionData['answers'][index]['text']
+                        : questionData['answers'][index].toString()),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
@@ -298,10 +276,7 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
               ),
             );
           }),
-
           const SizedBox(height: 32),
-
-          // Helper text - exactly matching Figma
           Text(
             'Take your time to choose the answer that best represents you',
             style: TextStyle(
@@ -311,9 +286,9 @@ class _MockInterviewAssessmentState extends State<MockInterviewAssessment> {
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 80), // Space for bottom navigation
+          const SizedBox(height: 80),
         ],
       ),
-    );
+    ));
   }
 }
