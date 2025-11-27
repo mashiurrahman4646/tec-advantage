@@ -45,6 +45,9 @@ class LoginController extends GetxController {
       final tokenSaved = await TokenService.ingestLoginResponse(result);
 
       if (tokenSaved) {
+        // Initialize FCM service (permissions, handlers, send token to backend)
+        FcmService.initialize();
+
         Get.offAllNamed('/home');
         Get.snackbar("Success", "Login Successful",
             backgroundColor: Colors.green, colorText: Colors.white);

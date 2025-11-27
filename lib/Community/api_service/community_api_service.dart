@@ -118,7 +118,8 @@ class CommunityApiService {
     required File? image,
   }) async {
     try {
-      final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.createComment(groupId, postId)}');
+      final uri = Uri.parse(
+          '${ApiConfig.baseUrl}${ApiConfig.createComment(groupId, postId)}');
       var request = http.MultipartRequest('POST', uri);
       final authHeaders = await TokenService.authHeaders();
       authHeaders.remove('Content-Type');
@@ -126,6 +127,52 @@ class CommunityApiService {
 
       request.fields['text'] = text;
       // No 'post' field required as postId is in path
+
+      if (image != null) {
+        final ext = image.path.toLowerCase().split('.').last;
+        final subtype = (ext == 'png') ? 'png' : 'jpeg';
+        final ct = MediaType('image', subtype);
+        final filename = image.path.split('/').last;
+        final stream = http.ByteStream(image.openRead());
+        final length = await image.length();
+        final multipartFile = http.MultipartFile(
+          'image',
+          stream,
+          length,
+          filename: filename,
+          contentType: ct,
+        );
+        request.files.add(multipartFile);
+      }
+
+      var response = await request.send();
+      var responseData = await response.stream.bytesToString();
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(responseData);
+        return decoded is Map<String, dynamic> ? decoded : {'success': true};
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> replyToComment({
+    required String commentId,
+    required String text,
+    required File? image,
+  }) async {
+    try {
+      // Endpoint: /api/v1/groups/comments/{commentId}/replies
+      final uri =
+          Uri.parse('${ApiConfig.baseUrl}/groups/comments/$commentId/replies');
+      var request = http.MultipartRequest('POST', uri);
+      final authHeaders = await TokenService.authHeaders();
+      authHeaders.remove('Content-Type');
+      request.headers.addAll(authHeaders);
+
+      request.fields['text'] = text;
 
       if (image != null) {
         final ext = image.path.toLowerCase().split('.').last;

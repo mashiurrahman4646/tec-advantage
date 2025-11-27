@@ -11,6 +11,8 @@ class PostDetailsController extends GetxController {
   final isLoading = false.obs;
   final comments = <CommentModel>[].obs;
   final selectedImage = Rxn<File>();
+  final replyingToCommentId = RxnString();
+  final replyingToUserName = RxnString();
 
   final ImagePicker _picker = ImagePicker();
 
@@ -40,7 +42,9 @@ class PostDetailsController extends GetxController {
         final ext = image.path.toLowerCase().split('.').last;
         final allowed = ['jpg', 'jpeg', 'png'];
         if (!allowed.contains(ext)) {
-          Get.snackbar('Unsupported file', 'Only .jpeg, .png, .jpg are supported', snackPosition: SnackPosition.BOTTOM);
+          Get.snackbar(
+              'Unsupported file', 'Only .jpeg, .png, .jpg are supported',
+              snackPosition: SnackPosition.BOTTOM);
           return;
         }
         selectedImage.value = File(image.path);
@@ -52,7 +56,21 @@ class PostDetailsController extends GetxController {
     selectedImage.value = null;
   }
 
+  void startReply(String commentId, String userName) {
+    replyingToCommentId.value = commentId;
+    replyingToUserName.value = userName;
+  }
+
+  void cancelReply() {
+    replyingToCommentId.value = null;
+    replyingToUserName.value = null;
+  }
+
   Future<bool> createComment(String text) async {
+    if (replyingToCommentId.value != null) {
+      return await _sendReply(text);
+    }
+
     final res = await CommunityApiService.createComment(
       groupId: groupId,
       postId: postId,
@@ -61,6 +79,21 @@ class PostDetailsController extends GetxController {
     );
     if (res != null && (res['success'] == true || res['message'] != null)) {
       removeImage();
+      await fetchComments();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> _sendReply(String text) async {
+    final res = await CommunityApiService.replyToComment(
+      commentId: replyingToCommentId.value!,
+      text: text,
+      image: selectedImage.value,
+    );
+    if (res != null && (res['success'] == true || res['message'] != null)) {
+      removeImage();
+      cancelReply();
       await fetchComments();
       return true;
     }

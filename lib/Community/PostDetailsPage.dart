@@ -235,79 +235,110 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
             color: Colors.white,
             padding: EdgeInsets.all(16),
             child: SafeArea(
-              child: Row(
+              child: Column(
                 children: [
-                  // Image attachment button
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.image_outlined,
-                        color: Colors.grey[600],
-                        size: 20,
-                      ),
-                      onPressed: controller.pickImage,
-                    ),
-                  ),
-                  SizedBox(width: 12),
-
-                  // Comment input field
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: TextField(
-                        controller: _commentController,
-                        decoration: InputDecoration(
-                          hintText: 'Write your Comment',
-                          hintStyle: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 14,
+                  Obx(() {
+                    if (controller.replyingToCommentId.value != null) {
+                      return Container(
+                        padding: EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Replying to ${controller.replyingToUserName.value}',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: controller.cancelReply,
+                              child: Icon(Icons.close,
+                                  size: 16, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return SizedBox.shrink();
+                  }),
+                  Row(
+                    children: [
+                      // Image attachment button
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.image_outlined,
+                            color: Colors.grey[600],
+                            size: 20,
                           ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
+                          onPressed: controller.pickImage,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+
+                      // Comment input field
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: TextField(
+                            controller: _commentController,
+                            decoration: InputDecoration(
+                              hintText: 'Write your Comment',
+                              hintStyle: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 14,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
+                      SizedBox(width: 12),
 
-                  // Send button
-                  GestureDetector(
-                    onTap: () async {
-                      final text = _commentController.text.trim();
-                      if (text.isEmpty) return;
-                      final ok = await controller.createComment(text);
-                      if (ok) {
-                        _commentController.clear();
-                        Get.snackbar('Success', 'Comment posted', snackPosition: SnackPosition.BOTTOM);
-                      } else {
-                        Get.snackbar('Error', 'Failed to post comment', snackPosition: SnackPosition.BOTTOM);
-                      }
-                    },
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(20),
+                      // Send button
+                      GestureDetector(
+                        onTap: () async {
+                          final text = _commentController.text.trim();
+                          if (text.isEmpty) return;
+                          final ok = await controller.createComment(text);
+                          if (ok) {
+                            _commentController.clear();
+                            Get.snackbar('Success', 'Posted successfully',
+                                snackPosition: SnackPosition.BOTTOM);
+                          } else {
+                            Get.snackbar('Error', 'Failed to post',
+                                snackPosition: SnackPosition.BOTTOM);
+                          }
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Icon(
+                            Icons.send,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
                       ),
-                      child: Icon(
-                        Icons.send,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -419,6 +450,21 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                           style: TextStyle(
                             color: Colors.grey[500],
                             fontSize: 11,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        GestureDetector(
+                          onTap: () {
+                            controller.startReply(
+                                comment.id, comment.user.name);
+                          },
+                          child: Text(
+                            'Reply',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ],

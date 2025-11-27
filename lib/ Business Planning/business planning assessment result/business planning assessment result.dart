@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
+import '../../business_plan/services/business_plan_api_service.dart';
+
 import '../../Coaching Page/welcome to coaching page/welcome_to_coaching_page.dart';
 
 class BusinessPlanCompleteScreen extends StatelessWidget {
@@ -139,8 +144,65 @@ class BusinessPlanCompleteScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        // Handle PDF download
+                      onPressed: () async {
+                        try {
+                          // Show loading indicator
+                          Get.dialog(
+                            const Center(child: CircularProgressIndicator()),
+                            barrierDismissible: false,
+                          );
+
+                          // Download PDF bytes
+                          final pdfBytes =
+                              await BusinessPlanApiService.downloadPdf();
+
+                          // Close loading indicator
+                          Get.back();
+
+                          if (pdfBytes != null) {
+                            // Get documents directory
+                            final directory =
+                                await getApplicationDocumentsDirectory();
+                            final filePath =
+                                '${directory.path}/business_plan.pdf';
+                            final file = File(filePath);
+
+                            // Write bytes to file
+                            await file.writeAsBytes(pdfBytes);
+
+                            // Open file
+                            final result = await OpenFilex.open(filePath);
+
+                            if (result.type != ResultType.done) {
+                              Get.snackbar(
+                                'Error',
+                                'Could not open PDF: ${result.message}',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.black,
+                                colorText: Colors.white,
+                              );
+                            }
+                          } else {
+                            Get.snackbar(
+                              'Error',
+                              'Failed to download PDF',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.black,
+                              colorText: Colors.white,
+                            );
+                          }
+                        } catch (e) {
+                          // Close loading indicator if open
+                          if (Get.isDialogOpen == true) Get.back();
+
+                          Get.snackbar(
+                            'Error',
+                            'An error occurred: $e',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.black,
+                            colorText: Colors.white,
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green[600],
@@ -209,7 +271,8 @@ class BusinessPlanCompleteScreen extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildFeatureItem('Market research & competition analysis'),
+                      _buildFeatureItem(
+                          'Market research & competition analysis'),
                       const SizedBox(height: 12),
                       _buildFeatureItem('Investor-ready financial projections'),
                       const SizedBox(height: 12),
@@ -223,7 +286,7 @@ class BusinessPlanCompleteScreen extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        Get.to(()=>CoachingWelcomeScreen());
+                        Get.to(() => CoachingWelcomeScreen());
                         // Handle strategy session booking
                       },
                       style: ElevatedButton.styleFrom(

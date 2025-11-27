@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../config_service.dart';
 import '../token_service/token_service.dart';
@@ -12,7 +13,11 @@ class NetworkResponse {
   final bool isSuccess;
   final String errorMessage;
 
-  NetworkResponse({required this.statusCode, this.responseData, required this.isSuccess, this.errorMessage = 'error'});
+  NetworkResponse(
+      {required this.statusCode,
+      this.responseData,
+      required this.isSuccess,
+      this.errorMessage = 'error'});
 }
 
 class NetworkCaller {
@@ -20,27 +25,58 @@ class NetworkCaller {
 
   NetworkCaller({this.timeout = const Duration(seconds: 20)});
 
-  Future<NetworkResponse> get(String endpoint, {Map<String, dynamic>? params, Map<String, String>? headers}) async {
+  Future<NetworkResponse> get(String endpoint,
+      {Map<String, dynamic>? params, Map<String, String>? headers}) async {
     return _request('GET', endpoint, params: params, headers: headers);
   }
 
-  Future<NetworkResponse> post(String endpoint, {Map<String, dynamic>? body, Map<String, String>? headers}) async {
+  Future<NetworkResponse> post(String endpoint,
+      {Map<String, dynamic>? body, Map<String, String>? headers}) async {
     return _request('POST', endpoint, body: body, headers: headers);
   }
 
-  Future<NetworkResponse> put(String endpoint, {Map<String, dynamic>? body, Map<String, String>? headers}) async {
+  Future<NetworkResponse> put(String endpoint,
+      {Map<String, dynamic>? body, Map<String, String>? headers}) async {
     return _request('PUT', endpoint, body: body, headers: headers);
   }
 
-  Future<NetworkResponse> patch(String endpoint, {Map<String, dynamic>? body, Map<String, String>? headers}) async {
+  Future<NetworkResponse> patch(String endpoint,
+      {Map<String, dynamic>? body, Map<String, String>? headers}) async {
     return _request('PATCH', endpoint, body: body, headers: headers);
   }
 
-  Future<NetworkResponse> delete(String endpoint, {Map<String, dynamic>? body, Map<String, String>? headers}) async {
+  Future<NetworkResponse> delete(String endpoint,
+      {Map<String, dynamic>? body, Map<String, String>? headers}) async {
     return _request('DELETE', endpoint, body: body, headers: headers);
   }
 
-  Future<NetworkResponse> _request(String method, String endpoint, {Map<String, dynamic>? params, Map<String, dynamic>? body, Map<String, String>? headers}) async {
+  Future<Uint8List?> getBinary(String endpoint,
+      {Map<String, dynamic>? params, Map<String, String>? headers}) async {
+    try {
+      final uri = _buildUri(endpoint, params);
+      final mergedHeaders = await _buildHeaders(headers);
+      LoggerService.request('GET (Binary)', uri, mergedHeaders, null);
+
+      final response =
+          await http.get(uri, headers: mergedHeaders).timeout(timeout);
+
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      } else {
+        LoggerService.error(
+            'GET (Binary)', uri, 'Status: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      LoggerService.error('GET (Binary)', Uri.parse(''), e);
+      return null;
+    }
+  }
+
+  Future<NetworkResponse> _request(String method, String endpoint,
+      {Map<String, dynamic>? params,
+      Map<String, dynamic>? body,
+      Map<String, String>? headers}) async {
     try {
       final uri = _buildUri(endpoint, params);
       final mergedHeaders = await _buildHeaders(headers);
@@ -50,25 +86,39 @@ class NetworkCaller {
       if (method == 'GET') {
         final started = DateTime.now();
         response = await http.get(uri, headers: mergedHeaders).timeout(timeout);
-        LoggerService.response(method, uri, response.statusCode, response.body, DateTime.now().difference(started));
+        LoggerService.response(method, uri, response.statusCode, response.body,
+            DateTime.now().difference(started));
       } else if (method == 'POST') {
         final started = DateTime.now();
-        response = await http.post(uri, headers: mergedHeaders, body: encodedBody).timeout(timeout);
-        LoggerService.response(method, uri, response.statusCode, response.body, DateTime.now().difference(started));
+        response = await http
+            .post(uri, headers: mergedHeaders, body: encodedBody)
+            .timeout(timeout);
+        LoggerService.response(method, uri, response.statusCode, response.body,
+            DateTime.now().difference(started));
       } else if (method == 'PUT') {
         final started = DateTime.now();
-        response = await http.put(uri, headers: mergedHeaders, body: encodedBody).timeout(timeout);
-        LoggerService.response(method, uri, response.statusCode, response.body, DateTime.now().difference(started));
+        response = await http
+            .put(uri, headers: mergedHeaders, body: encodedBody)
+            .timeout(timeout);
+        LoggerService.response(method, uri, response.statusCode, response.body,
+            DateTime.now().difference(started));
       } else if (method == 'PATCH') {
         final started = DateTime.now();
-        response = await http.patch(uri, headers: mergedHeaders, body: encodedBody).timeout(timeout);
-        LoggerService.response(method, uri, response.statusCode, response.body, DateTime.now().difference(started));
+        response = await http
+            .patch(uri, headers: mergedHeaders, body: encodedBody)
+            .timeout(timeout);
+        LoggerService.response(method, uri, response.statusCode, response.body,
+            DateTime.now().difference(started));
       } else if (method == 'DELETE') {
         final started = DateTime.now();
-        response = await http.delete(uri, headers: mergedHeaders, body: encodedBody).timeout(timeout);
-        LoggerService.response(method, uri, response.statusCode, response.body, DateTime.now().difference(started));
+        response = await http
+            .delete(uri, headers: mergedHeaders, body: encodedBody)
+            .timeout(timeout);
+        LoggerService.response(method, uri, response.statusCode, response.body,
+            DateTime.now().difference(started));
       } else {
-        return NetworkResponse(statusCode: -1, isSuccess: false, errorMessage: 'unsupported');
+        return NetworkResponse(
+            statusCode: -1, isSuccess: false, errorMessage: 'unsupported');
       }
       final decoded = _decode(response.body);
       final sc = response.statusCode;
@@ -80,27 +130,35 @@ class NetworkCaller {
         }
       }
       if (success) {
-        return NetworkResponse(statusCode: sc, isSuccess: true, responseData: decoded);
+        return NetworkResponse(
+            statusCode: sc, isSuccess: true, responseData: decoded);
       }
       final msg = _extractMessage(decoded) ?? 'error';
-      return NetworkResponse(statusCode: sc, isSuccess: false, responseData: decoded, errorMessage: msg);
+      return NetworkResponse(
+          statusCode: sc,
+          isSuccess: false,
+          responseData: decoded,
+          errorMessage: msg);
     } on TimeoutException catch (_) {
       try {
         final uri = _buildUri(endpoint, params);
         LoggerService.error(method, uri, 'timeout');
       } catch (_) {}
-      return NetworkResponse(statusCode: -1, isSuccess: false, errorMessage: 'timeout');
+      return NetworkResponse(
+          statusCode: -1, isSuccess: false, errorMessage: 'timeout');
     } catch (e) {
       try {
         final uri = _buildUri(endpoint, params);
         LoggerService.error(method, uri, e);
       } catch (_) {}
-      return NetworkResponse(statusCode: -1, isSuccess: false, errorMessage: e.toString());
+      return NetworkResponse(
+          statusCode: -1, isSuccess: false, errorMessage: e.toString());
     }
   }
 
   Uri _buildUri(String endpoint, Map<String, dynamic>? params) {
-    final isAbsolute = endpoint.startsWith('http://') || endpoint.startsWith('https://');
+    final isAbsolute =
+        endpoint.startsWith('http://') || endpoint.startsWith('https://');
     final base = isAbsolute ? '' : ApiConfig.baseUrl;
     final full = isAbsolute ? endpoint : '$base$endpoint';
     if (params == null || params.isEmpty) {
@@ -110,11 +168,12 @@ class NetworkCaller {
     return Uri.parse(full).replace(queryParameters: qp);
   }
 
-  Future<Map<String, String>> _buildHeaders(Map<String, String>? headers) async {
-    // final defaultHeaders = {'Content-Type': 'application/json'};
+  Future<Map<String, String>> _buildHeaders(
+      Map<String, String>? headers) async {
+    final defaultHeaders = {'Content-Type': 'application/json'};
     final auth = await TokenService.authHeaders();
     final merged = <String, String>{};
-    // merged.addAll(defaultHeaders);
+    merged.addAll(defaultHeaders);
     merged.addAll(auth);
     if (headers != null) merged.addAll(headers);
     return merged;

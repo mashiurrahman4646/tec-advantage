@@ -1,7 +1,6 @@
 import '../../config_service.dart';
 import '../../services/network_caller.dart';
 
-
 class ApiService {
   static Future<Map<String, dynamic>?> login({
     required String email,
@@ -13,8 +12,9 @@ class ApiService {
       final res = await caller.post(ApiConfig.login, body: {
         'email': email,
         'password': password,
-        'fcm_token': fcmToken,
-        'device_type': DateTime.now().millisecondsSinceEpoch % 2 == 0 ? 'android' : 'ios',
+        'fcmToken': fcmToken,
+        'device_type':
+            DateTime.now().millisecondsSinceEpoch % 2 == 0 ? 'android' : 'ios',
       });
       if (res.isSuccess) {
         return res.responseData ?? {};

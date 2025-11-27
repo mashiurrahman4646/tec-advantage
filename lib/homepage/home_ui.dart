@@ -1,4 +1,5 @@
 // home_ui.dart
+import 'package:business_onboarding_app/business_plan/views/business_overview_screen.dart';
 import 'package:business_onboarding_app/success_path_assessment/success_path_assessment.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,10 +15,11 @@ import '../app_text_styles.dart';
 import '../bootcamp/bootcamp welcome/bootcampwelcome.dart';
 import '../getnotification/notification.dart';
 import '../notification/notification_setting.dart';
- // Add this import for notification page
+// Add this import for notification page
 import '../small business exm/small business exm/small business exm.dart';
 import '../user_profile/user profile dart.dart';
 import '../token_service/token_service.dart';
+import '../services/fcm_service.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -91,6 +93,14 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
               ),
+              IconButton(
+                icon:
+                    const Icon(Icons.notifications_active, color: Colors.blue),
+                onPressed: () {
+                  // Test notification
+                  FcmService.showTestNotification();
+                },
+              ),
             ],
           ),
         ],
@@ -151,7 +161,8 @@ class HomePage extends StatelessWidget {
                             Get.toNamed('/success-path-selection');
                           },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 16),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(20),
@@ -216,18 +227,21 @@ class HomePage extends StatelessWidget {
             _buildToolkitListItem(
               iconPath: 'assets/icons/smallbusniess.png',
               title: 'Small Business',
-              description: 'Tell us about your business and unlock a free personalized assessment with tailored recommendations to help you grow.',
+              description:
+                  'Tell us about your business and unlock a free personalized assessment with tailored recommendations to help you grow.',
               onTap: () {
-                Get.toNamed('/success-path-welcome', arguments: {'slug': 'small-business'});
+                Get.toNamed('/success-path-welcome',
+                    arguments: {'slug': 'small-business'});
               },
             ),
 
             _buildToolkitListItem(
               iconPath: 'assets/icons/businessplanning.png',
               title: 'Business Planning',
-              description: 'Build your business blueprint—complete our guided template, export to PDF, or request a deeper, customized plan for your goals.',
+              description:
+                  'Build your business blueprint—complete our guided template, export to PDF, or request a deeper, customized plan for your goals.',
               onTap: () {
-                Get.to(() => BusinessOverviewScreen());
+                Get.to(() => BusinessPlanOverviewScreen());
                 // Navigate to business planning section
               },
             ),
@@ -235,7 +249,8 @@ class HomePage extends StatelessWidget {
             _buildToolkitListItem(
               iconPath: 'assets/icons/mockinterview.png',
               title: 'Mock Interviews',
-              description: 'Practice real interview questions and get instant feedback to sharpen your skills.',
+              description:
+                  'Practice real interview questions and get instant feedback to sharpen your skills.',
               onTap: () {
                 Get.to(() => const MockInterviewWelcomeScreen());
               },
@@ -244,9 +259,10 @@ class HomePage extends StatelessWidget {
             _buildToolkitListItem(
               iconPath: 'assets/icons/bootcamp.png',
               title: 'Bootcamp',
-              description: 'A one-stop boot camp for people looking to get into tech and entrepreneurs. Build your tech knowledge, master business strategies, and grow with every lesson.',
+              description:
+                  'A one-stop boot camp for people looking to get into tech and entrepreneurs. Build your tech knowledge, master business strategies, and grow with every lesson.',
               onTap: () {
-                Get.to(()=>BootcampWelcomeScreen());
+                Get.to(() => BootcampWelcomeScreen());
                 // Navigate to bootcamp section
               },
             ),
@@ -254,9 +270,10 @@ class HomePage extends StatelessWidget {
             _buildToolkitListItem(
               iconPath: 'assets/icons/applyforcoaching.png',
               title: 'Apply For Coaching',
-              description: 'Get matched with a business coach to scale smarter—practice interviews, refine your strategy, and gain confidence to succeed.',
+              description:
+                  'Get matched with a business coach to scale smarter—practice interviews, refine your strategy, and gain confidence to succeed.',
               onTap: () {
-                Get.to(()=>CoachingWelcomeScreen());
+                Get.to(() => CoachingWelcomeScreen());
                 // Navigate to coaching application
               },
             ),
@@ -264,7 +281,8 @@ class HomePage extends StatelessWidget {
             _buildToolkitListItem(
               iconPath: 'assets/icons/community.png',
               title: 'Community',
-              description: 'Join interactive rooms where entrepreneurs connect, share ideas, and support each other on the journey to success.',
+              description:
+                  'Join interactive rooms where entrepreneurs connect, share ideas, and support each other on the journey to success.',
               onTap: () {
                 Get.to(() => CommunityPage()); // Navigate to community page
               },
@@ -331,21 +349,18 @@ class HomePage extends StatelessWidget {
                         Get.to(() => UserProfilePage()); // Then navigate
                       },
                     ),
-
                     const SizedBox(height: 20),
-
                     _buildDrawerOption(
                       icon: Icons.notifications_outlined,
                       title: 'Notification Setting',
                       description: 'Manage your notifications',
                       onTap: () {
                         Navigator.pop(context); // Close drawer first
-                        Get.to(() => NotificationSettingsPage()); // Then navigate
+                        Get.to(
+                            () => NotificationSettingsPage()); // Then navigate
                       },
                     ),
-
                     const SizedBox(height: 20),
-
                     _buildDrawerOption(
                       icon: Icons.description_outlined,
                       title: 'Terms & Conditions',
