@@ -5,7 +5,6 @@ import '../../app_text_styles.dart';
 import '../small business exm/small business exm.dart';
 import '../small business assessment result/small business assessment.dart';
 
-
 class SmallBusinessCongratulationsScreen extends StatelessWidget {
   const SmallBusinessCongratulationsScreen({Key? key}) : super(key: key);
 
@@ -66,7 +65,9 @@ class SmallBusinessCongratulationsScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     final args = Get.arguments;
-                    final int value = (args is Map && args['value'] is int) ? args['value'] as int : 0;
+                    final int value = (args is Map && args['value'] is int)
+                        ? args['value'] as int
+                        : 0;
                     Get.to(() => AssessmentResultScreen(value: value));
                   },
                   style: ElevatedButton.styleFrom(

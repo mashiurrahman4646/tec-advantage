@@ -55,7 +55,7 @@ class PostModel {
       return firstImage;
     }
 
-    return 'http://10.10.7.102:3000$firstImage';
+    return 'https://grass-proxy-possible-depends.trycloudflare.com/$firstImage';
   }
 }
 

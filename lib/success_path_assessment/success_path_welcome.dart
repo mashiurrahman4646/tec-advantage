@@ -1,3 +1,4 @@
+import 'package:business_onboarding_app/small%20business%20exm/small%20business%20exm/small%20business%20exm.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../app_colors.dart';
@@ -35,7 +36,9 @@ class SuccessPathWelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final args = Get.arguments;
-    final slug = (args is Map && args['slug'] is String) ? args['slug'] as String : 'small-business';
+    final slug = (args is Map && args['slug'] is String)
+        ? args['slug'] as String
+        : 'small-business';
     final title = _titleForSlug(slug);
     final welcome = _welcomeForSlug(slug);
     return Scaffold(
@@ -98,15 +101,17 @@ class SuccessPathWelcomeScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   if (slug == 'small-business') {
-                    Get.toNamed('/small-business-selection');
+                    Get.to(BusinessAssessmentScreen());
                   } else {
-                    Get.toNamed('/success-path-assessment', arguments: {'slug': slug});
+                    Get.toNamed('/success-path-assessment',
+                        arguments: {'slug': slug});
                   }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
                 child: Text(
                   'Continue',

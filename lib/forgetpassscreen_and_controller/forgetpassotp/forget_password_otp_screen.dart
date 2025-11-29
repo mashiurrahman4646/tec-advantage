@@ -4,12 +4,16 @@ import '../../app_colors.dart';
 import '../../app_text_styles.dart';
 import 'forgetpassotp_controller.dart';
 
-
 class ForgetPasswordOtpScreen extends StatelessWidget {
-  final ForgetPassOtpController _controller = Get.put(ForgetPassOtpController());
+  final String email;
+
+  ForgetPasswordOtpScreen({required this.email});
 
   @override
   Widget build(BuildContext context) {
+    final ForgetPassOtpController _controller =
+        Get.put(ForgetPassOtpController(email: email));
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: LayoutBuilder(
@@ -29,7 +33,8 @@ class ForgetPasswordOtpScreen extends StatelessWidget {
                       Align(
                         alignment: Alignment.topLeft,
                         child: IconButton(
-                          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                          icon: Icon(Icons.arrow_back,
+                              color: AppColors.textPrimary),
                           onPressed: () => Get.back(),
                         ),
                       ),
@@ -115,16 +120,20 @@ class ForgetPasswordOtpScreen extends StatelessWidget {
                               ),
                               onChanged: (value) {
                                 if (value.isNotEmpty) {
-                                  _controller.handleOtpChange(value, index, context);
+                                  _controller.handleOtpChange(
+                                      value, index, context);
                                 } else {
-                                  _controller.handleBackspace(value, index, context);
+                                  _controller.handleBackspace(
+                                      value, index, context);
                                 }
                               },
                               onTap: () {
                                 _controller.focusNodes[index].requestFocus();
-                                _controller.otpControllers[index].selection = TextSelection(
+                                _controller.otpControllers[index].selection =
+                                    TextSelection(
                                   baseOffset: 0,
-                                  extentOffset: _controller.otpControllers[index].text.length,
+                                  extentOffset: _controller
+                                      .otpControllers[index].text.length,
                                 );
                               },
                             ),
@@ -136,13 +145,13 @@ class ForgetPasswordOtpScreen extends StatelessWidget {
 
                       // Timer - Only this part needs to be reactive
                       Obx(() => Text(
-                        'Code expires in: ${_controller.getFormattedTime()}',
-                        style: AppTextStyles.onboardingDescription.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      )),
+                            'Code expires in: ${_controller.getFormattedTime()}',
+                            style: AppTextStyles.onboardingDescription.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          )),
 
                       const SizedBox(height: 30),
 
@@ -195,7 +204,8 @@ class ForgetPasswordOtpScreen extends StatelessWidget {
                           child: Center(
                             child: Text(
                               'Back to sign in',
-                              style: AppTextStyles.onboardingDescription.copyWith(
+                              style:
+                                  AppTextStyles.onboardingDescription.copyWith(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 16,
@@ -219,7 +229,8 @@ class ForgetPasswordOtpScreen extends StatelessWidget {
                             children: [
                               TextSpan(
                                 text: 'Resend',
-                                style: AppTextStyles.onboardingDescription.copyWith(
+                                style: AppTextStyles.onboardingDescription
+                                    .copyWith(
                                   color: AppColors.primary,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,

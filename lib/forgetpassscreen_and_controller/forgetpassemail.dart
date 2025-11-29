@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../app_colors.dart';
 import '../app_text_styles.dart';
+import '../services/network_caller.dart';
+import '../config_service.dart';
 import 'forgetpassotp/forget_password_otp_screen.dart';
- // Import the OTP screen
 
 class ForgetEmailVerify extends StatefulWidget {
   @override
@@ -12,11 +13,69 @@ class ForgetEmailVerify extends StatefulWidget {
 
 class _ForgetEmailVerifyState extends State<ForgetEmailVerify> {
   final TextEditingController _emailController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _sendForgetPasswordRequest() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Please enter your email address',
+        backgroundColor: AppColors.error,
+        colorText: AppColors.white,
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await NetworkCaller().post(
+        ApiConfig.forgetPassword,
+        body: {'email': email},
+      );
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (response.isSuccess) {
+        Get.snackbar(
+          'Success',
+          'OTP has been sent to your email',
+          backgroundColor: Colors.green,
+          colorText: AppColors.white,
+        );
+        // Navigate to OTP screen and pass the email
+        Get.to(() => ForgetPasswordOtpScreen(email: email));
+      } else {
+        Get.snackbar(
+          'Error',
+          response.errorMessage,
+          backgroundColor: AppColors.error,
+          colorText: AppColors.white,
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      Get.snackbar(
+        'Error',
+        'Something went wrong. Please try again.',
+        backgroundColor: AppColors.error,
+        colorText: AppColors.white,
+      );
+    }
   }
 
   @override
@@ -40,7 +99,8 @@ class _ForgetEmailVerifyState extends State<ForgetEmailVerify> {
                       Align(
                         alignment: Alignment.topLeft,
                         child: IconButton(
-                          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                          icon: Icon(Icons.arrow_back,
+                              color: AppColors.textPrimary),
                           onPressed: () => Get.back(),
                         ),
                       ),
@@ -91,10 +151,13 @@ class _ForgetEmailVerifyState extends State<ForgetEmailVerify> {
                             ),
                             child: TextField(
                               controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
                               decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 hintText: 'Please enter your email address',
-                                hintStyle: AppTextStyles.onboardingDescription.copyWith(
+                                hintStyle: AppTextStyles.onboardingDescription
+                                    .copyWith(
                                   color: AppColors.grey,
                                 ),
                                 border: InputBorder.none,
@@ -117,35 +180,33 @@ class _ForgetEmailVerifyState extends State<ForgetEmailVerify> {
 
                       const SizedBox(height: 30),
 
-                      // Continue button - UPDATED to navigate to OTP screen
+                      // Continue button
                       GestureDetector(
-                        onTap: () {
-                          if (_emailController.text.isEmpty) {
-                            Get.snackbar(
-                              'Error',
-                              'Please enter your email address',
-                              backgroundColor: AppColors.error,
-                              colorText: AppColors.white,
-                            );
-                          } else {
-                            // Navigate to OTP verification screen
-                            Get.to(() => ForgetPasswordOtpScreen());
-                          }
-                        },
+                        onTap: _isLoading ? null : _sendForgetPasswordRequest,
                         child: Container(
                           width: double.infinity,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color:
+                                _isLoading ? AppColors.grey : AppColors.primary,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Center(
-                            child: Text(
-                              'Continue',
-                              style: AppTextStyles.buttonText.copyWith(
-                                color: AppColors.white,
-                              ),
-                            ),
+                            child: _isLoading
+                                ? SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(
+                                    'Continue',
+                                    style: AppTextStyles.buttonText.copyWith(
+                                      color: AppColors.white,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),

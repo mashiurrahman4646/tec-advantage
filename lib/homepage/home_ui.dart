@@ -20,12 +20,15 @@ import '../small business exm/small business exm/small business exm.dart';
 import '../user_profile/user profile dart.dart';
 import '../token_service/token_service.dart';
 import '../services/fcm_service.dart';
+import '../user_profile/controllers/user_profile_controller.dart';
+import '../config_service.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    Get.put(UserProfileController());
     return Scaffold(
       backgroundColor: AppColors.background,
       drawer: _buildDrawer(context),
@@ -38,25 +41,39 @@ class HomePage extends StatelessWidget {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundImage: AssetImage('assets/images/ericka.png'),
-              onBackgroundImageError: (exception, stackTrace) {},
-              child: AssetImage('assets/images/ericka.png') == null
-                  ? Icon(Icons.person, size: 20, color: Colors.white)
-                  : null,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Hi Ericka',
-              style: AppTextStyles.heading2.copyWith(
-                fontSize: 16,
-                color: Colors.black,
-              ),
-            ),
-          ],
+        title: GetBuilder<UserProfileController>(
+          builder: (controller) {
+            if (controller.isLoading) {
+              return const Text('Loading...');
+            }
+            final userData = controller.userProfileModel?.data;
+            final String? imagePath = userData?.image;
+            final String imageUrl = imagePath != null
+                ? '${ApiConfig.baseUrl.replaceAll('/api/v1', '')}$imagePath'
+                : '';
+
+            return Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundImage:
+                      imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+                  onBackgroundImageError: (exception, stackTrace) {},
+                  child: imageUrl.isEmpty
+                      ? const Icon(Icons.person, size: 20, color: Colors.white)
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Hi ${userData?.name ?? 'User'}',
+                  style: AppTextStyles.heading2.copyWith(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         actions: [
           Stack(
@@ -92,14 +109,6 @@ class HomePage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
-              ),
-              IconButton(
-                icon:
-                    const Icon(Icons.notifications_active, color: Colors.blue),
-                onPressed: () {
-                  // Test notification
-                  FcmService.showTestNotification();
-                },
               ),
             ],
           ),
@@ -306,32 +315,44 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 20),
 
               // Profile Section
-              Column(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundImage: AssetImage('assets/images/ericka.png'),
-                    onBackgroundImageError: (exception, stackTrace) {},
-                    child: Icon(Icons.person, size: 40, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Ericka Ericka',
-                    style: AppTextStyles.heading2.copyWith(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Ericka@example.com',
-                    style: AppTextStyles.onboardingDescription.copyWith(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+              GetBuilder<UserProfileController>(
+                builder: (controller) {
+                  final userData = controller.userProfileModel?.data;
+                  final String? imagePath = userData?.image;
+                  final String imageUrl = imagePath != null
+                      ? '${ApiConfig.baseUrl.replaceAll('/api/v1', '')}$imagePath'
+                      : '';
+                  return Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundImage:
+                            imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
+                        onBackgroundImageError: (exception, stackTrace) {},
+                        child: imageUrl.isEmpty
+                            ? Icon(Icons.person, size: 40, color: Colors.grey)
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        userData?.name ?? 'User Name',
+                        style: AppTextStyles.heading2.copyWith(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        userData?.email ?? 'email@example.com',
+                        style: AppTextStyles.onboardingDescription.copyWith(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
 
               const SizedBox(height: 40),

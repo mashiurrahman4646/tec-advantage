@@ -1,3 +1,4 @@
+import 'package:business_onboarding_app/homepage/home_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -6,14 +7,16 @@ import 'assessment_result_controller.dart';
 
 class AssessmentResultScreen extends StatelessWidget {
   final int value;
-  const AssessmentResultScreen({Key? key, required this.value}) : super(key: key);
+  const AssessmentResultScreen({Key? key, required this.value})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final tag = 'result-$value';
     final c = Get.isRegistered<AssessmentResultController>(tag: tag)
         ? Get.find<AssessmentResultController>(tag: tag)
-        : Get.put(AssessmentResultController(value: value), tag: tag, permanent: true);
+        : Get.put(AssessmentResultController(value: value),
+            tag: tag, permanent: true);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -39,7 +42,9 @@ class AssessmentResultScreen extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (c.error.value != null) {
-          return Center(child: Text(c.error.value!, style: const TextStyle(color: Colors.red)));
+          return Center(
+              child: Text(c.error.value!,
+                  style: const TextStyle(color: Colors.red)));
         }
         final map = c.data.value ?? {};
         final range = map['range']?.toString() ?? '';
@@ -85,7 +90,10 @@ class AssessmentResultScreen extends StatelessWidget {
                   children: [
                     Text(
                       'Score: $value',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black),
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -95,7 +103,8 @@ class AssessmentResultScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     Text(
                       description,
-                      style: TextStyle(fontSize: 14, color: Color(0xFF666666), height: 1.4),
+                      style: TextStyle(
+                          fontSize: 14, color: Color(0xFF666666), height: 1.4),
                       textAlign: TextAlign.left,
                     ),
                   ],
@@ -123,7 +132,8 @@ class AssessmentResultScreen extends StatelessWidget {
                 ),
                 child: Text(
                   recommendedService,
-                  style: TextStyle(fontSize: 14, color: Colors.black, height: 1.4),
+                  style:
+                      TextStyle(fontSize: 14, color: Colors.black, height: 1.4),
                 ),
               ),
               const SizedBox(height: 24),
@@ -177,7 +187,7 @@ class AssessmentResultScreen extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
-                    Get.back();
+                    Get.to(HomePage());
                   },
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 16),

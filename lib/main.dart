@@ -26,6 +26,7 @@ import 'signupemailverification/emailverification_ui.dart';
 import 'signupemailverification/RegistrationSuccessScreen.dart';
 import 'token_service/token_service.dart';
 import 'services/fcm_service.dart';
+import 'services/first_launch_service.dart';
 
 // Background message handler (must be top-level function)
 @pragma('vm:entry-point')
@@ -75,8 +76,21 @@ void main() async {
     FcmService.handleMessageTap(initialMessage);
   }
 
-  final bool hasSession = await TokenService.hasToken();
-  runApp(MyApp(initialRoute: hasSession ? '/home' : '/onboarding'));
+  // Check if this is first launch
+  final bool isFirstLaunch = await FirstLaunchService.isFirstLaunch();
+
+  // Determine initial route based on first launch and session
+  String initialRoute;
+  if (isFirstLaunch) {
+    // Show onboarding on first launch
+    initialRoute = '/onboarding';
+  } else {
+    // Check for existing session
+    final bool hasSession = await TokenService.hasToken();
+    initialRoute = hasSession ? '/home' : '/login';
+  }
+
+  runApp(MyApp(initialRoute: initialRoute));
 }
 
 class MyApp extends StatelessWidget {
@@ -142,11 +156,13 @@ class MyApp extends StatelessWidget {
             transition: Transition.rightToLeft),
         GetPage(
             name: '/forgot-password-otp',
-            page: () => ForgetPasswordOtpScreen(),
+            page: () =>
+                ForgetPasswordOtpScreen(email: Get.parameters['email'] ?? ''),
             transition: Transition.rightToLeft),
         GetPage(
             name: '/reset-password',
-            page: () => ResetPasswordScreen(),
+            page: () =>
+                ResetPasswordScreen(email: Get.parameters['email'] ?? ''),
             transition: Transition.rightToLeft),
         GetPage(
             name: '/home', page: () => HomePage(), transition: Transition.fade),

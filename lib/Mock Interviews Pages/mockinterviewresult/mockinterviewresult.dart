@@ -28,7 +28,8 @@ class MockInterviewResults extends StatelessWidget {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black, size: 24),
+                  icon: const Icon(Icons.arrow_back,
+                      color: Colors.black, size: 24),
                   onPressed: () => Get.back(),
                   padding: EdgeInsets.zero,
                   constraints: BoxConstraints(minWidth: 40, minHeight: 40),
@@ -73,13 +74,16 @@ class MockInterviewResults extends StatelessWidget {
                         SizedBox(height: 16),
                         Obx(() {
                           if (c.loading.value) {
-                            return const Text('Loading results...', style: TextStyle(fontSize: 16));
+                            return const Text('Loading results...',
+                                style: TextStyle(fontSize: 16));
                           }
                           if (c.error.value != null) {
-                            return Text(c.error.value!, style: const TextStyle(color: Colors.red));
+                            return Text(c.error.value!,
+                                style: const TextStyle(color: Colors.red));
                           }
                           return Text(
-                            c.recommendationText.value ?? 'No recommendation available',
+                            c.recommendationText.value ??
+                                'No recommendation available',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w400,
@@ -98,9 +102,12 @@ class MockInterviewResults extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 12),
-                        _buildBulletPoint('Book a 1:1 Mock Interview Coaching Session.'),
-                        _buildBulletPoint('Use STAR: Situation, Task, Action, Result for answers.'),
-                        _buildBulletPoint('Practice behavioral questions with feedback.'),
+                        _buildBulletPoint(
+                            'Book a 1:1 Mock Interview Coaching Session.'),
+                        _buildBulletPoint(
+                            'Use STAR: Situation, Task, Action, Result for answers.'),
+                        _buildBulletPoint(
+                            'Practice behavioral questions with feedback.'),
                       ],
                     ),
                   ),
@@ -121,7 +128,7 @@ class MockInterviewResults extends StatelessWidget {
                     height: 52,
                     child: ElevatedButton(
                       onPressed: () {
-                        Get.to(()=>CoachingWelcomeScreen());
+                        Get.to(() => CoachingWelcomeScreen());
                         // Handle booking coaching session
                         print('Book Coaching Session pressed');
                       },
@@ -144,32 +151,6 @@ class MockInterviewResults extends StatelessWidget {
                   ),
                   SizedBox(height: 12),
                   // Download Answer Button
-                  Container(
-                    width: double.infinity,
-                    height: 52,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        // Handle download answer
-                        print('Download Answer pressed');
-                      },
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.black, width: 1.5),
-                        foregroundColor: Colors.black,
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        'Download Answer',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

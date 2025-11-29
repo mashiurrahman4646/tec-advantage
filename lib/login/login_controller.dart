@@ -2,18 +2,48 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/fcm_service.dart';
 import '../token_service/token_service.dart';
 import 'api_service/login_api_service.dart'; // এই লাইনটি সঠিক করুন
 
 class LoginController extends GetxController {
   var isLoading = false.obs;
-  var email = ''.obs;
-  var password = ''.obs;
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  var rememberMe = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadSavedCredentials();
+  }
+
+  Future<void> loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    rememberMe.value = prefs.getBool('remember_me') ?? false;
+    if (rememberMe.value) {
+      emailController.text = prefs.getString('remember_email') ?? '';
+      passwordController.text = prefs.getString('remember_password') ?? '';
+    }
+  }
+
+  Future<void> saveCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (rememberMe.value) {
+      await prefs.setBool('remember_me', true);
+      await prefs.setString('remember_email', emailController.text);
+      await prefs.setString('remember_password', passwordController.text);
+    } else {
+      await prefs.remove('remember_me');
+      await prefs.remove('remember_email');
+      await prefs.remove('remember_password');
+    }
+  }
 
   Future<void> login() async {
     // ইনপুট চেক
-    if (email.isEmpty || password.isEmpty) {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       Get.snackbar("Error", "Please fill all fields",
           backgroundColor: Colors.red, colorText: Colors.white);
       return;
@@ -32,8 +62,8 @@ class LoginController extends GetxController {
 
     // API কল
     final result = await ApiService.login(
-      email: email.value,
-      password: password.value,
+      email: emailController.text,
+      password: passwordController.text,
       fcmToken: fcmToken,
     );
 
@@ -45,6 +75,9 @@ class LoginController extends GetxController {
       final tokenSaved = await TokenService.ingestLoginResponse(result);
 
       if (tokenSaved) {
+        // Save credentials if Remember Me is checked
+        await saveCredentials();
+
         // Initialize FCM service (permissions, handlers, send token to backend)
         FcmService.initialize();
 

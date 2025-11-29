@@ -8,87 +8,80 @@ class RegistrationSuccessScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Spacer(),
+              // Success Icon with background
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(25),
+                child: Image.asset(
+                  'assets/icons/right1.png',
+                  fit: BoxFit.contain,
+                ),
               ),
-              child: IntrinsicHeight(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.15),
-                      // Success Icon
-                      Image.asset(
-                        'assets/icons/right1.png',
-                        width: 80,
-                        height: 80,
+              const SizedBox(height: 40),
 
-                      ),
-                      SizedBox(height: 30),
-                      // Title
-                      Text(
-                        'Hi Ericka',
-                        style: AppTextStyles.heading2.copyWith(
-                          fontSize: 24,
-                          height: 1.2,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 20),
-                      // Success Message
-                      Text(
-                        'Your Registration Successful',
-                        style: AppTextStyles.heading2.copyWith(
-                          fontSize: 20,
-                          height: 1.2,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 15),
-                      // Congratulations Message
-                      Text(
-                        'Congratulations! Your journey to smarter\ngrowth starts now.',
-                        style: AppTextStyles.onboardingDescription,
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 40),
-                      // Continue button
-                      GestureDetector(
-                        onTap: () {
-                          // Navigate to home page
-                          Get.offAllNamed('/home');
-                        },
-                        child: Container(
-                          width: MediaQuery.of(context).size.width * 0.8,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Continue',
-                              style: AppTextStyles.buttonText.copyWith(
-                                color: AppColors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.15),
-                    ],
+              // Success Title
+              Text(
+                'Registration Successful!',
+                style: AppTextStyles.heading1.copyWith(
+                  fontSize: 28,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+
+              // Description
+              Text(
+                'Congratulations! Your journey to smarter\ngrowth starts now.',
+                style: AppTextStyles.bodyText.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const Spacer(),
+
+              // Continue Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.offAllNamed('/login');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Continue to Login',
+                    style: AppTextStyles.buttonText.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
       ),
     );
   }

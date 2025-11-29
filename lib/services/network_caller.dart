@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import '../config_service.dart';
 import '../token_service/token_service.dart';
 import 'logger_service.dart';
@@ -70,6 +71,94 @@ class NetworkCaller {
     } catch (e) {
       LoggerService.error('GET (Binary)', Uri.parse(''), e);
       return null;
+    }
+  }
+
+  Future<NetworkResponse> patchMultipart(String endpoint,
+      {Map<String, String>? fields,
+      Map<String, String>? files,
+      Map<String, String>? headers}) async {
+    try {
+      final uri = _buildUri(endpoint, null);
+      final request = http.MultipartRequest('PATCH', uri);
+
+      // Add headers
+      final authHeaders = await TokenService.authHeaders();
+      request.headers.addAll(authHeaders);
+      if (headers != null) {
+        request.headers.addAll(headers);
+      }
+
+      // Ensure Content-Type is NOT application/json
+      request.headers.remove('Content-Type');
+
+      // Add fields
+      if (fields != null) {
+        request.fields.addAll(fields);
+      }
+
+      // Add files
+      if (files != null) {
+        for (var entry in files.entries) {
+          if (entry.value.isNotEmpty) {
+            final String filePath = entry.value;
+            final String extension = filePath.split('.').last.toLowerCase();
+
+            // Determine content type
+            var contentType;
+            if (extension == 'jpg' || extension == 'jpeg') {
+              contentType = MediaType('image', 'jpeg');
+            } else if (extension == 'png') {
+              contentType = MediaType('image', 'png');
+            }
+
+            final file = await http.MultipartFile.fromPath(
+              entry.key,
+              entry.value,
+              contentType: contentType,
+            );
+            request.files.add(file);
+          }
+        }
+      }
+
+      LoggerService.request(
+          'PATCH (Multipart)', uri, request.headers, fields.toString());
+
+      final streamedResponse = await request.send().timeout(timeout);
+      final response = await http.Response.fromStream(streamedResponse);
+
+      LoggerService.response('PATCH (Multipart)', uri, response.statusCode,
+          response.body, Duration.zero);
+
+      final decoded = _decode(response.body);
+      final sc = response.statusCode;
+      final success = sc == 200 || sc == 201 || sc == 204;
+
+      if (sc == 401) {
+        await TokenService.clearToken();
+        if (Get.currentRoute != '/login') {
+          Get.offAllNamed('/login');
+        }
+      }
+
+      if (success) {
+        return NetworkResponse(
+            statusCode: sc, isSuccess: true, responseData: decoded);
+      }
+
+      final msg = _extractMessage(decoded) ?? 'error';
+      return NetworkResponse(
+          statusCode: sc,
+          isSuccess: false,
+          responseData: decoded,
+          errorMessage: msg);
+    } on TimeoutException catch (_) {
+      return NetworkResponse(
+          statusCode: -1, isSuccess: false, errorMessage: 'timeout');
+    } catch (e) {
+      return NetworkResponse(
+          statusCode: -1, isSuccess: false, errorMessage: e.toString());
     }
   }
 

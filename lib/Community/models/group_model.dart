@@ -33,7 +33,7 @@ class GroupModel {
     if (image.startsWith('http://') || image.startsWith('https://')) {
       return image;
     }
-    return 'http://10.10.7.102:3000$image';
+    return 'https://grass-proxy-possible-depends.trycloudflare.com/$image';
   }
 }
 

@@ -2,7 +2,7 @@
 import 'package:get/get.dart';
 
 import 'onbording_model.dart';
-
+import '../services/first_launch_service.dart';
 
 class OnboardingController extends GetxController {
   // Observable current page index
@@ -15,18 +15,20 @@ class OnboardingController extends GetxController {
       image: 'assets/images/onbording1.png', // Changed from onboarding1.png
       title: 'Set Your Business Goals',
 
-      description: 'Every business is unique-your solution should reflect that. Rather than settling for generic, out-of-the-box software that only scratches the surface, we design customized solutions built to grow with you. Our tailored approach ensures your business scales efficiently, effectively, and on your terms.',
+      description:
+          'Every business is unique-your solution should reflect that. Rather than settling for generic, out-of-the-box software that only scratches the surface, we design customized solutions built to grow with you. Our tailored approach ensures your business scales efficiently, effectively, and on your terms.',
     ),
     OnboardingModel(
       image: 'assets/images/onbording2.png', // Changed from onboarding2.png
       title: 'Small Business Solutions',
-      description: 'Identify your strengths and map out the path to achieve your entrepreneurial dreams.',
-
+      description:
+          'Identify your strengths and map out the path to achieve your entrepreneurial dreams.',
     ),
     OnboardingModel(
       image: 'assets/images/onbording3.png', // Changed from onboarding3.png
       title: 'Become a Successful Entrepreneur',
-      description: 'Turn your vision into reality with the right guidance, practice, and confidence.',
+      description:
+          'Turn your vision into reality with the right guidance, practice, and confidence.',
     ),
   ];
 
@@ -47,7 +49,9 @@ class OnboardingController extends GetxController {
   }
 
   // Navigate to login screen
-  void goToLogin() {
+  void goToLogin() async {
+    // Mark first launch as complete
+    await FirstLaunchService.setFirstLaunchComplete();
     // Navigate to login screen and remove all previous routes
     Get.offAllNamed('/login');
   }
@@ -60,7 +64,8 @@ class OnboardingController extends GetxController {
   }
 
   // Get current onboarding data
-  OnboardingModel get currentOnboardingData => onboardingPages[currentPage.value];
+  OnboardingModel get currentOnboardingData =>
+      onboardingPages[currentPage.value];
 
   // Check if current page is last page
   bool get isLastPage => currentPage.value == onboardingPages.length - 1;
